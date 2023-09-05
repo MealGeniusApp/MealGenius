@@ -13,12 +13,16 @@ const LoadingCard = (props) => {
             source={{ uri: 'https://i.gifer.com/4V0b.gif' }}
             style={styles.image}
           />
-        </View>
-
+      </View>
         
-      <Text style={styles.description}>Please wait while we generate meals just for you.</Text>
+      <Text style={styles.description}>Generating meals...</Text>
 
       <Progress.Bar progress={props.progress} width={200} />
+
+      <View style = {styles.bottomTextContainer}>
+        <Text style={styles.bottomText}>Tired of waiting? Enabling Fast Mode in Preferences will load food quicker, but with less variation.</Text>
+      </View>
+
     </View>
   );
 };
@@ -45,6 +49,8 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     marginTop: 30,
+    marginBottom: 20,
+    
   },
   imagecontainer: {
     alignItems: 'center'
@@ -52,7 +58,16 @@ const styles = StyleSheet.create({
   image: {
     width: 200,
     height: 200,
-    resizeMode: 'cover', // You can choose other resizeMode values
+    resizeMode: 'cover', 
+  },
+  bottomTextContainer: {
+    flex: 1, 
+    justifyContent: 'flex-end',
+    alignItems: 'center', 
+    marginBottom: 50
+  },
+  bottomText: {
+    fontSize: 16,
   },
 });
 

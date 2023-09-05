@@ -9,29 +9,37 @@ import { useState, useEffect } from 'react'
 // Move asyncstorage.setitem for food queues to when the app closes. Dont need to do it after every meal generation!
 
 // Note for queue size errors
+let breakfastQueue = []
+let lunchQueue = []
+let dinnerQueue = []
+let history = {
+  breakfast: [],
+  lunch: [],
+  dinner: [],
+}
+
+let breakfastToGenerate = 0
+let lunchToGenerate = 0
+let dinnerToGenerate = 0
+
 // The size of the queue when printing will not exceed 10. What happens, is extra food is generated, because some generations over dominate the update of the queue for others. So a food generation will sometimes fail to update the state, causing an extra generation
 export default function App() {
   
+  // Don't wait for history to be updated between swipes. Faster, less varied
+  const FAST_MODE = false
+
+  // Stateful progress monitors stateless queues and sends data to loading screen for real-time analytics.
+  const [progress, setProgress] = useState(0)
   const [breakfastLoaded, setBreakfastLoaded] = useState(false)
   const [lunchLoaded, setLunchLoaded] = useState(false)
   const [dinnerLoaded, setDinnerLoaded] = useState(false)
 
   const [nextMeal, setNextMeal] = useState('')
-  const [stateDummy, setStateDummy] = useState(0)
 
-  const [breakfastQueue, setBreakfastQueue] = useState([])
-  const [lunchQueue, setLunchQueue] = useState([])
-  const [dinnerQueue, setDinnerQueue] = useState([])
-  const [history, setHistory] = useState({
-    breakfast: [],
-    lunch: [],
-    dinner: [],
-  });
+  
   const MAX_HISTORY_LENGTH = 50
 
-  const [breakfastToGenerate, setBreakfastToGenerate] = useState(0)
-  const [lunchToGenerate, setLunchToGenerate] = useState(0)
-  const [dinnerToGenerate, setDinnerToGenerate] = useState(0)
+  
 
   const [breakfastList, setBreakfastList] = useState([])
   const [lunchList, setLunchList] = useState([])
@@ -42,7 +50,7 @@ export default function App() {
 
   const [init, setInit] = useState(true)
   const [loading, setLoading] = useState(true)
-  const MIN_QUEUE_SIZE = 10
+  const MIN_QUEUE_SIZE = 20
   // For billing charge per api call.
   // Limit each api call tokens through max special request length??
   // Charge for at least max possible usage
@@ -75,12 +83,6 @@ export default function App() {
       {
         case 'breakfast':
         {
-          // let temp = breakfastQueue[0]
-          // if (temp.title === nextMeal.title)
-          // {
-          //   temp = breakfastQueue[1]
-          // }
-          // setNextMeal(temp)
 
           setNextMeal(breakfastQueue[0])
           break
@@ -110,7 +112,7 @@ export default function App() {
     }
     else{
       // Done loading.. trigger meal update
-      console.log(' Done loading!')
+      console.log('Done loading!')
       //setActiveMeal(DEFAULT_MEAL)
       if (!nextMeal)
       {
@@ -153,32 +155,6 @@ export default function App() {
 
   };
 
-  useEffect(() => {
-    if (breakfastToGenerate > 0)
-    {
-      generateMeal('breakfast')
-    }
-
-  }, [breakfastToGenerate])
-
-  useEffect(() => {
-    
-    if (lunchToGenerate > 0)
-    {
-      generateMeal('lunch')
-    }
-
-  }, [lunchToGenerate])
-
-  useEffect(() => {
-    
-    if (dinnerToGenerate > 0)
-    {
-      generateMeal('dinner')
-    }
-
-  }, [dinnerToGenerate])
-
 
 
   useEffect(() => {
@@ -191,6 +167,37 @@ export default function App() {
     };
   }, []);
 
+  // Meal queues
+  function scheduleMeal(meal, count)
+  {
+    // Increase the number of meals to generate
+    switch(meal)
+    {
+      case 'breakfast':
+      {
+        breakfastToGenerate += count
+        break
+      }
+      case 'lunch':
+      {
+        lunchToGenerate += count
+        break
+      }
+      case 'dinner':
+      {
+        dinnerToGenerate += count
+        break
+      }
+    }
+
+    // Start the cycle if it was not running
+    if ( ((meal === 'breakfast'? breakfastToGenerate : meal === 'lunch'? lunchToGenerate : dinnerToGenerate) === count) || FAST_MODE)
+    {
+      // Queue was empty so must start the recursive calls
+      generateMeal(meal)
+    }
+  }
+
   // On first load, get values from storage and restore state
   if (init)
   {
@@ -199,12 +206,12 @@ export default function App() {
     // AsyncStorage.removeItem('dinner_queue')
     setInit(false)
 
+
     // Load history from storage
     AsyncStorage.getItem('history').then(value => {
       if (value)
       {
-        console.log(JSON.parse(value))
-        setHistory(JSON.parse(value))
+        history = (JSON.parse(value))
       }
         
         
@@ -214,11 +221,10 @@ export default function App() {
 
     AsyncStorage.getItem('breakfast_queue').then(value => {
       let q = JSON.parse(value)
-      console.log('breakfast queue: ', q.length)
       if (q?.length >= MIN_QUEUE_SIZE - 1)
       {
         // We have saved data, load it!
-        setBreakfastQueue(q)
+        breakfastQueue = q
         setBreakfastLoaded(true)
         
       }
@@ -227,23 +233,20 @@ export default function App() {
       else
       {
         if (q)
-          setBreakfastQueue(q)
-        // Clear old state
-        console.log('generating new breakfast queue...')
-        setBreakfastToGenerate(MIN_QUEUE_SIZE - (q? q.length: 0))
+          breakfastQueue = q
+        scheduleMeal('breakfast', (MIN_QUEUE_SIZE - (q? q.length: 0)))
       }
       
-
+      setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
         
     });
 
     AsyncStorage.getItem('lunch_queue').then(value => {
       let q = JSON.parse(value)
-      console.log('lunch queue: ', q.length)
       if (q?.length >= MIN_QUEUE_SIZE - 1)
         // We have saved data, load it!
         {
-          setLunchQueue(q)
+          lunchQueue = q
           setLunchLoaded(true)
         }
         
@@ -253,12 +256,11 @@ export default function App() {
       else
       {
         if (q)
-          setLunchQueue(q)
-        console.log('generating new lunch queue...')
-        setLunchToGenerate(MIN_QUEUE_SIZE - (q? q.length: 0))
+          lunchQueue = q
+        scheduleMeal('lunch', (MIN_QUEUE_SIZE - (q? q.length: 0)))
       }
         
-
+      setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
         
     });
 
@@ -268,7 +270,7 @@ export default function App() {
       if (q?.length >= MIN_QUEUE_SIZE - 1)
         // We have saved data, load it!
         {
-          setDinnerQueue(q)
+          dinnerQueue = q
           setDinnerLoaded(true)
         }
         
@@ -278,13 +280,16 @@ export default function App() {
       else
       {
         if (q)
-          setDinnerQueue(q)
-        console.log('generating new dinner queue...')
-        setDinnerToGenerate(MIN_QUEUE_SIZE- (q? q.length: 0))
+          dinnerQueue = q
+        scheduleMeal('dinner', (MIN_QUEUE_SIZE - (q? q.length: 0)))
       }
+
+      // Update load progress
+      setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
         
     });
     })
+
 
     // Initialize preferences
     AsyncStorage.getItem('preferences').then(value => {
@@ -326,37 +331,37 @@ function changeMeal(newMeal)
 // Swiped on a meal
 function swiped(right)
 {
-  //test(breakfastQueue)
-  setStateDummy(stateDummy + 1)
+  // If we ran out of meals (swiping too fast! ) Show the load screen while they regenerate
+  if (((activeMeal == 'breakfast')? breakfastQueue.length : (activeMeal == 'lunch')? lunchQueue.length : dinnerQueue.length) == 1)
+  {
+    setLoading(true)
+  }
   // Remove and store the first item from the array
   let meal = ''
   switch (activeMeal)
   {
     case 'breakfast':
       {
-        
+        // Queue is no longer fully loaded
+        setBreakfastLoaded(false)
         meal = breakfastQueue.shift()
-        //setBreakfastQueue(breakfastQueue)
         setNextMeal(breakfastQueue[0])
-        if (breakfastQueue.length < MIN_QUEUE_SIZE)
-          //setBreakfastToGenerate(MIN_QUEUE_SIZE - (breakfastQueue.length + breakfastToGenerate)) // Attempt: Desired queue size - sum of current queue and pending queue items
-          setBreakfastToGenerate(breakfastToGenerate + 1)
         break
       }
     case 'lunch':
       {
+        // Queue is no longer fully loaded
+        setLunchLoaded(false)
         meal = lunchQueue.shift()
         setNextMeal(lunchQueue[0])
-        if (lunchQueue.length < MIN_QUEUE_SIZE)
-          setLunchToGenerate(lunchToGenerate + 1)
         break
       }
     case 'dinner':
       {
+        // Queue is no longer fully loaded
+        setDinnerLoaded(false)
         meal = dinnerQueue.shift()
         setNextMeal(dinnerQueue[0])
-        if (dinnerQueue.length < MIN_QUEUE_SIZE)
-          setDinnerToGenerate(dinnerToGenerate + 1)
         break
       }
 
@@ -366,6 +371,9 @@ function swiped(right)
         break
       }
   }
+
+  // Schedule the new meal to be generated: Starts meal gen or increases count
+  scheduleMeal(activeMeal, 1)
 
   // We know the meal , we need to learn it
   if (right)
@@ -382,35 +390,6 @@ function learnMeal(meal)
 
 async function generateMeal(meal)
 {
-  
-  setStateDummy(stateDummy + 1)
-  // Check if we already have enough and should halt
-  switch (meal)
-  {
-    
-    case 'breakfast':
-    {
-      if (breakfastQueue.length >= MIN_QUEUE_SIZE)
-        return
-      else
-        break
-    }
-    case 'lunch':
-    {
-      if (lunchQueue.length >= MIN_QUEUE_SIZE)
-        return
-      else
-        break
-    }
-    case 'dinner':
-      {
-        if (dinnerQueue.length >= MIN_QUEUE_SIZE)
-          return
-        else
-          break
-      }
-  }
-  
   // Gather preferences from state
   let blacklist = []
   let complexity_easy = 1
@@ -537,7 +516,6 @@ async function generateMeal(meal)
     }
   )
     .then(response => {
-      setStateDummy(stateDummy + 1)
 
       result = response.data.choices[0].message.content
       //console.log(result)
@@ -548,19 +526,17 @@ async function generateMeal(meal)
       let description = result.substring(result.toUpperCase().indexOf('DESC: ') + 6, result.length)
 
       //add this title to history
-      const historyCopy = { ...history };
-      const activeMealHistory = [...historyCopy[activeMeal]];
+      const activeMealHistory = [...history[activeMeal]];
       activeMealHistory.push(title);
 
       // Check to see if the length is too long now
-      if (activeMealHistory.length >= MAX_HISTORY_LENGTH)
+      if (activeMealHistory.length > MAX_HISTORY_LENGTH)
       {
         activeMealHistory.shift()
       }
 
       // Finalize and update the new history state
-      historyCopy[activeMeal] = activeMealHistory;
-      setHistory(historyCopy);
+      history[activeMeal] = activeMealHistory;
 
 
       
@@ -593,55 +569,70 @@ async function generateMeal(meal)
       // Add the new Meal 
       function addMeal()
       {
+        
+
         newMeal = {title: title, description: description, meal: meal, image: image, ingredients: '', instructions: ''}
           // Debug print for the generated food title
           console.log(title)
 
           if (meal === 'breakfast')
           {
-            let newQueue = breakfastQueue.concat(newMeal)
-            setBreakfastQueue(newQueue)
-            setBreakfastToGenerate(breakfastToGenerate - 1)
-            AsyncStorage.setItem('breakfast_queue', JSON.stringify(newQueue))
+            breakfastQueue.push(newMeal)
+            breakfastToGenerate--
+            AsyncStorage.setItem('breakfast_queue', JSON.stringify(breakfastQueue))
 
-            // If breakfast just has not yet loaded, check if it is now loaded
-            if (!breakfastLoaded && (newQueue?.length >= MIN_QUEUE_SIZE))
+            // Load next meal if queue is not empty
+            if (breakfastToGenerate > 0)
             {
-              // Will check if all food types are loaded and if so sets loading to false through useEffect
+              generateMeal('breakfast')
+            }
+            else
+            {
               setBreakfastLoaded(true)
             }
           }
 
           else if (meal === 'lunch')
           {
-            let newQueue = lunchQueue.concat(newMeal)
-            setLunchQueue(newQueue)
-            setLunchToGenerate(lunchToGenerate - 1)
-            AsyncStorage.setItem('lunch_queue', JSON.stringify(newQueue))
+            lunchQueue.push(newMeal)
+            lunchToGenerate--
+            AsyncStorage.setItem('lunch_queue', JSON.stringify(lunchQueue))
 
-             // If lunch just has not yet loaded, check if it is now loaded
-             if (!lunchLoaded && (newQueue?.length >= MIN_QUEUE_SIZE))
-             {
-               // Will check if all food types are loaded and if so sets loading to false through useEffect
-               setLunchLoaded(true)
-             }
+            // Load next meal if queue is not empty
+            if (lunchToGenerate > 0)
+            {
+              generateMeal('lunch')
+            }
+            // If lunch just has not yet loaded, it has been loaded now
+            else
+            {
+              // Will check if all food types are loaded and if so sets loading to false through useEffect
+              setLunchLoaded(true)
+            }
           }
           else if (meal === 'dinner')
           {
 
-            newQueue = dinnerQueue.concat(newMeal)
-            setDinnerQueue(newQueue)
-            setDinnerToGenerate(dinnerToGenerate - 1)
-            AsyncStorage.setItem('dinner_queue', JSON.stringify(newQueue))
+            dinnerQueue.push(newMeal)
+            dinnerToGenerate--
+            AsyncStorage.setItem('dinner_queue', JSON.stringify(dinnerQueue))
 
-             // If dinner just has not yet loaded, check if it is now loaded
-             if (!dinnerLoaded && (newQueue?.length >= MIN_QUEUE_SIZE))
-             {
-               // Will check if all food types are loaded and if so sets loading to false through useEffect
-               setDinnerLoaded(true)
-             }
+            // Load next meal if queue is not empty
+            if (dinnerToGenerate > 0)
+            {
+              generateMeal('dinner')
+            }
+
+            // If dinner just has not yet loaded, check if it is now loaded
+            else
+            {
+              // Will check if all food types are loaded and if so sets loading to false through useEffect
+              setDinnerLoaded(true)
+            }
           }
         
+          // Update loading progress
+          setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
       }
 
       
@@ -657,7 +648,7 @@ async function generateMeal(meal)
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Navigation loadProgress = {(breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE)} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading}></Navigation>
+      <Navigation loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading}></Navigation>
   </GestureHandlerRootView>
   );
 }

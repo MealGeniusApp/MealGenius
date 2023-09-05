@@ -5,6 +5,7 @@ import { PanGestureHandler } from 'react-native-gesture-handler';
 const SwipeableCard = ({ nextMeal, swipe}) => {
   const [translateX] = useState(new Animated.Value(0));
   const [opacity] = useState(new Animated.Value(1));
+  const SWIPE_THRESH = 25
   
 
   const onGestureEvent = Animated.event(
@@ -23,7 +24,7 @@ const SwipeableCard = ({ nextMeal, swipe}) => {
   const onGestureEnd = () => {
     // Done swiping
     // Aborted Swipe
-    if (translateX._value  <= 25 && translateX._value >= -25) {
+    if (translateX._value  <= SWIPE_THRESH && translateX._value >= -SWIPE_THRESH) {
       Animated.spring(translateX, {
         toValue: 0,
         useNativeDriver: false,
@@ -33,26 +34,25 @@ const SwipeableCard = ({ nextMeal, swipe}) => {
     // Swiped Right
     else if (translateX._value > 0)
     {
-      swipe(true)
+      
 
       Animated.timing(translateX, {
         toValue: 500, // Target value
         duration: 300, // Animation duration
         useNativeDriver: false,
-      }).start(() => replaceCard());
+      }).start(() => replaceCard(true));
 
     }
 
     // Swiped left
     else if (translateX._value < 0)
     {
-      swipe(false)
 
       Animated.timing(translateX, {
         toValue: -500, // Target value
         duration: 300, // Animation duration
         useNativeDriver: false,
-      }).start(() => replaceCard());
+      }).start(() => replaceCard(false));
       
     }
     
@@ -60,7 +60,9 @@ const SwipeableCard = ({ nextMeal, swipe}) => {
 
 
   // Load the next card onto the screen and into reference
-  const replaceCard = () => {
+  const replaceCard = (right) => {
+    // Call swipe event to load the next meal to the UI
+    swipe(right)
     
     opacity._value = 0
 
@@ -119,6 +121,8 @@ const SwipeableCard = ({ nextMeal, swipe}) => {
 
 const styles = StyleSheet.create({
   card: {
+    display: 'flex',
+    alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 16,
@@ -133,16 +137,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+    paddingBottom: 16
   },
   description: {
     marginTop: 8,
   },
   imagecontainer: {
-    alignItems: 'center'
+    alignItems: 'center',
+    paddingBottom: 16
   },
   image: {
     width: 200,
     height: 200,
+    borderWidth: 1,     
+    borderColor: 'gray', 
+    borderRadius: 5,      
     resizeMode: 'cover', // You can choose other resizeMode values
   },
 });
