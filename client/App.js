@@ -5,9 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react'
-// Note for production
-// Move asyncstorage.setitem for food queues to when the app closes. Dont need to do it after every meal generation!
-
+import {BASE_URL} from "@env"
 // Note for queue size errors
 let breakfastQueue = []
 let lunchQueue = []
@@ -392,6 +390,8 @@ async function generateMeal(meal)
 {
   // Gather preferences from state
   let blacklist = []
+  let blacklist_str = ''
+  let history_str = ''
   let complexity_easy = 1
   let complexity_hard = 1
   let complexity_medium = 1
@@ -417,14 +417,10 @@ async function generateMeal(meal)
     }
     
   }
-  
-
-  let query = `give me a random ${complexity} ${meal? meal: 'breakfast'} meal and a 20 word description.`
-  
 
   if (blacklist.length)
   {
-    let blacklist_str = ''
+    
 
     if (blacklist.length === 1)
     {
@@ -450,12 +446,10 @@ async function generateMeal(meal)
       }
     }
 
-    // Append blacklist
-    query += `Do not include anything that contains or is related to ${blacklist_str}!` 
+    
   }
-    if (history[activeMeal].length)
+  if (history[activeMeal].length)
   {
-    let history_str = ''
 
     if (history[activeMeal].length === 1)
     {
@@ -480,97 +474,31 @@ async function generateMeal(meal)
         }
       }
     }
+  } // end history section
 
-    //APpend history
-    query+= `Do not use any of the following: ${history_str}`
-  }
-    
-    
+  // Execute endpoint from server
+  axios.post(`${BASE_URL}/generateMeal`, {meal: meal, complexity: complexity, blacklist: blacklist_str, history: history_str})
+  .then(response => {
+    let description = response.data.description
+    let title = response.data.title
+    let image = response.data.image
 
-  
+    //add this title to history
+    const activeMealHistory = [...history[activeMeal]];
+    activeMealHistory.push(title);
 
-  // Final instruction
-  //query += ' Your response should strictly be the meal title, then a description of the meal, then a list of igredients, and finally a list of detailed instructions.'
-  query+= 'Your response must be in the form of FOOD: {meal} DESC: {description}'
-
-  
-  const apiKey = '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';
-  const endpoint = 'https://api.openai.com/v1/chat/completions';
-
-  const messages = [
-    { role: 'user', content: query },
-  ];
-  
-  //console.log(query)
-  axios.post(
-    endpoint,
+    // Check to see if the length is too long now
+    if (activeMealHistory.length > MAX_HISTORY_LENGTH)
     {
-      model: 'gpt-3.5-turbo',
-      messages: messages,
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
+      activeMealHistory.shift()
     }
-  )
-    .then(response => {
 
-      result = response.data.choices[0].message.content
-      
-      
-      let image = ''
-      let title = result.substring(result.toUpperCase().indexOf('FOOD:')+6,  result.toUpperCase().indexOf('DESC') - 1).replace(new RegExp('"', 'g'), '').replace(new RegExp(':', 'g'), '')
-      let description = result.substring(result.toUpperCase().indexOf('DESC: ') + 6, result.length)
+    // Finalize and update the new history state
+    history[activeMeal] = activeMealHistory;
 
-      //add this title to history
-      const activeMealHistory = [...history[activeMeal]];
-      activeMealHistory.push(title);
+    // Add the meal
 
-      // Check to see if the length is too long now
-      if (activeMealHistory.length > MAX_HISTORY_LENGTH)
-      {
-        activeMealHistory.shift()
-      }
-
-      // Finalize and update the new history state
-      history[activeMeal] = activeMealHistory;
-
-
-      
-      // Get the image for this meal
-      axios.get(`https://www.google.com/search?q=${encodeURI(title)}+free&tbm=isch`)
-      .then(response => {
-        
-        const htmlContent = response.data;
-        const start = htmlContent.indexOf('src="https')
-        const end = htmlContent.substring(start + 5, htmlContent.length).indexOf('"')
-
-        image = htmlContent.substring(start + 5, start + end + 5)
-        
-        // const start = htmlContent.indexOf('href="/url?q=')
-        // const end = htmlContent.substring(start + 12, htmlContent.length).indexOf('"')
-
-        // image = htmlContent.substring(start + 12, start + end + 12)
-        // console.log(htmlContent)
-        // console.log(image)
-
-        addMeal()
-          
-      })
-      .catch(error => {
-        // Image quota reached?
-        //console.log(error)
-        addMeal()
-      });
-
-      // Add the new Meal 
-      function addMeal()
-      {
-        
-
-        newMeal = {title: title, description: description, meal: meal, image: image, ingredients: '', instructions: ''}
+    newMeal = {title: title, description: description, meal: meal, image: image, ingredients: '', instructions: ''}
           // Debug print for the generated food title
           console.log(title)
 
@@ -632,15 +560,12 @@ async function generateMeal(meal)
         
           // Update loading progress
           setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
-      }
-
       
-    })
-    .catch(error => {
-      console.log(error.message)
-      //setTimeout(() => {generateMeal(meal)}, 1000)
-    });
 
+  })
+  .catch(error => {
+    console.log(`Error in MealGenius api @ generateMeal: `, error)
+  })
 
 }
 
