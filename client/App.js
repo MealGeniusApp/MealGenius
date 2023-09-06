@@ -518,7 +518,6 @@ async function generateMeal(meal)
     .then(response => {
 
       result = response.data.choices[0].message.content
-      //console.log(result)
       
       
       let image = ''
