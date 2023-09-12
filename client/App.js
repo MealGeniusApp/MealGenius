@@ -11,6 +11,8 @@ import {BASE_URL} from "@env"
 // add table for all devices for keeping track of trials? Or query all users?
 // Move pin to new screen with back button
 // remember me?
+//enforce valid email
+// if email is not confirmed in 5 mins, and account is new (devices length is 0) delete the account
 let breakfastQueue = []
 let lunchQueue = []
 let dinnerQueue = []
@@ -76,6 +78,7 @@ export default function App() {
       {
         setAuthenticated(true)
       }
+      setPreInit(false)
     })
 
   }, [preInit])
@@ -193,6 +196,17 @@ export default function App() {
   {
     AsyncStorage.removeItem('token')
     setAuthenticated(false)
+  }
+
+  // Clear history
+  function clearHistory()
+  {
+    AsyncStorage.removeItem('history')
+    history = {
+      breakfast: [],
+      lunch: [],
+      dinner: [],
+    }
   }
 
   // Meal queues
@@ -610,7 +624,7 @@ async function generateMeal(meal)
   {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Navigation logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading}></Navigation>
+        <Navigation clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading}></Navigation>
     </GestureHandlerRootView>
     );
   }

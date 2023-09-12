@@ -94,7 +94,7 @@ export default function LoginScreen(props) {
       else if (e.response.status === 422)
       {
         // New device, code sent
-        setStatus('Email sent!')
+        setStatus('This seems to be a new device. Please enter the code sent to your email.')
         setUserId(e.response.data.token)
 
         // Load UI for code entry
@@ -136,13 +136,21 @@ export default function LoginScreen(props) {
     axios.post(`${BASE_URL}/confirmDevice`, {user_id: userId, code: code})
     .then((res) =>
     {
-      setShowCode(false)
+      // Login
       setStatus('Success!')
+      onLoginPress()
     })
     .catch((e) => {
-      setStatus('Incorrect code!')
+      setStatus('Incorrect code, please try again.')
     })
   };
+
+  if (showCode)
+  {
+    return(
+      <CodeEntry fulfilled = {onFulfill} status = {status}></CodeEntry>
+    )
+  }
 
   return (
     <KeyboardAvoidingView style={styles.containerView} behavior="padding">
@@ -179,7 +187,7 @@ export default function LoginScreen(props) {
 
             <Text style={styles.errorText}>{status}</Text>
 
-            <CodeEntry visible = {showCode} fulfilled = {onFulfill} ></CodeEntry>
+            
 
           </View>
         </View>

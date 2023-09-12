@@ -308,7 +308,7 @@ router.post('/generateMeal', (req,res) => {
     description = result.substring(result.toUpperCase().indexOf('DESC: ') + 6, result.length)
 
     // Get the image for this meal
-    axios.get(`https://www.google.com/search?q=${encodeURI(title)}+free&tbm=isch`)
+    axios.get(`https://www.google.com/search?q=${encodeURI(title)}&tbm=isch&tbs=il:cl`)
     .then(response => {
       
       const htmlContent = response.data;

@@ -22,6 +22,7 @@ const login_style = StyleSheet.create({
     fontWeight: "200",
     marginTop: 20,
     marginBottom: 30,
+    marginHorizontal: 40,
     textAlign: "center",
   },
   loginFormView: {
