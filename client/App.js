@@ -1,12 +1,16 @@
 
 import {AppState } from 'react-native';
 import Navigation from './Screens/Navigation';
+import Login from './Components/Login';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react'
 import {BASE_URL} from "@env"
-// Note for queue size errors
+// TODO
+// add table for all devices for keeping track of trials? Or query all users?
+// Move pin to new screen with back button
+// remember me?
 let breakfastQueue = []
 let lunchQueue = []
 let dinnerQueue = []
@@ -22,6 +26,8 @@ let dinnerToGenerate = 0
 
 // The size of the queue when printing will not exceed 10. What happens, is extra food is generated, because some generations over dominate the update of the queue for others. So a food generation will sometimes fail to update the state, causing an extra generation
 export default function App() {
+
+  const [authenticated, setAuthenticated] = useState(false)
   
   // Don't wait for history to be updated between swipes. Faster, less varied
   const FAST_MODE = false
@@ -35,7 +41,7 @@ export default function App() {
   const [nextMeal, setNextMeal] = useState('')
 
   
-  const MAX_HISTORY_LENGTH = 50
+  const MAX_HISTORY_LENGTH = 150
 
   
 
@@ -46,17 +52,33 @@ export default function App() {
   const [activeMeal, setActiveMeal] = useState(DEFAULT_MEAL)
   const [preferences, setPreferences] = useState({})
 
-  const [init, setInit] = useState(true)
+  const [init, setInit] = useState(false)
+  // Automatically check to see if we are logged in
+  const [preInit, setPreInit] = useState(true)
   const [loading, setLoading] = useState(true)
   const MIN_QUEUE_SIZE = 20
-  // For billing charge per api call.
-  // Limit each api call tokens through max special request length??
-  // Charge for at least max possible usage
 
-  // useEffect(() => {
-  //   console.log('New history:', history)
-  // }, [history])
+  // When we authenticate, initialize.
+  useEffect(() =>
+  {
+    if (authenticated)
+    {
+      setInit(true)
+    }
+  }, [authenticated])
 
+
+  useEffect(() =>
+  {
+    AsyncStorage.getItem('token').then(value => {
+      // If we are logged in, set auth to true to show the app and init
+      if (value)
+      {
+        setAuthenticated(true)
+      }
+    })
+
+  }, [preInit])
 
   useEffect(() => {
     // If all meals are loaded, set loaded to true because everything has loaded
@@ -165,6 +187,14 @@ export default function App() {
     };
   }, []);
 
+
+  // Log out through preference page
+  function logOut()
+  {
+    AsyncStorage.removeItem('token')
+    setAuthenticated(false)
+  }
+
   // Meal queues
   function scheduleMeal(meal, count)
   {
@@ -204,6 +234,7 @@ export default function App() {
     // AsyncStorage.removeItem('dinner_queue')
     setInit(false)
 
+    console.log('initializing')
 
     // Load history from storage
     AsyncStorage.getItem('history').then(value => {
@@ -316,6 +347,13 @@ export default function App() {
 
   }
 
+// Login from login screen
+function loggedIn(token)
+{
+  AsyncStorage.setItem('token', token)
+  setAuthenticated(true)
+  
+}
 
 // Client changes meal from header touch
 function changeMeal(newMeal)
@@ -568,11 +606,17 @@ async function generateMeal(meal)
   })
 
 }
+  if (authenticated)
+  {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Navigation logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading}></Navigation>
+    </GestureHandlerRootView>
+    );
+  }
+  return(
+    <Login login = {loggedIn}></Login>
+  )
 
-
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Navigation loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading}></Navigation>
-  </GestureHandlerRootView>
-  );
+  
 }

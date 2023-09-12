@@ -60,7 +60,8 @@ const Navigation = (props) => {
         }} children={()=><Discover swipe={props.swipe} nextMeal = {props.nextMeal} loading = {props.loading} loadProgress = {props.loadProgress}/>}/>
         <Tab.Screen name="List" component={List} />
         <Tab.Screen name="Cart" component={Cart} />
-        <Tab.Screen name="Preferences" component={Preferences} />
+        <Tab.Screen name="Preferences"
+        children={()=><Preferences logout={props.logout}/>} />
       </Tab.Navigator>
     </NavigationContainer>
   );
