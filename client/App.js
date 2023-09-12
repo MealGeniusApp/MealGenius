@@ -9,9 +9,7 @@ import { useState, useEffect } from 'react'
 import {BASE_URL} from "@env"
 // TODO
 // add table for all devices for keeping track of trials? Or query all users?
-// Move pin to new screen with back button
 // remember me?
-//enforce valid email
 // if email is not confirmed in 5 mins, and account is new (devices length is 0) delete the account
 let breakfastQueue = []
 let lunchQueue = []
@@ -53,6 +51,7 @@ export default function App() {
   const DEFAULT_MEAL = 'breakfast'
   const [activeMeal, setActiveMeal] = useState(DEFAULT_MEAL)
   const [preferences, setPreferences] = useState({})
+  const [user, setUser] = useState({}) // user preferences, tokens, etc
 
   const [init, setInit] = useState(false)
   // Automatically check to see if we are logged in
@@ -76,7 +75,7 @@ export default function App() {
       // If we are logged in, set auth to true to show the app and init
       if (value)
       {
-        setAuthenticated(true)
+        logIn(value)
       }
       setPreInit(false)
     })
@@ -250,6 +249,15 @@ export default function App() {
 
     console.log('initializing')
 
+    // Load user data from DB
+    AsyncStorage.getItem('token').then(value => {
+      if (value)
+      {
+        logIn(value)
+      }
+    })
+    
+
     // Load history from storage
     AsyncStorage.getItem('history').then(value => {
       if (value)
@@ -361,12 +369,25 @@ export default function App() {
 
   }
 
-// Login from login screen
+// middleware Login from login screen: Must set token because it definitely is not set
 function loggedIn(token)
 {
   AsyncStorage.setItem('token', token)
-  setAuthenticated(true)
+  logIn(token)
+}
+
+// Log in: load user data and authenticate
+function logIn(token)
+{
   
+  axios.post(`${BASE_URL}/user`, {user_id: token})
+  .then((res) => {
+    setUser(res.data.user)
+    setAuthenticated(true)
+  })
+  .catch((e) => {
+    console.log('Error in logIn app.js: ', e)
+  })
 }
 
 // Client changes meal from header touch

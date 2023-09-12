@@ -39,6 +39,8 @@ if (__DEV__) {
 
 export default function LoginScreen(props) {
 
+  const isEmail = /^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$/;
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showCode, setShowCode] = useState(false)
@@ -76,12 +78,14 @@ export default function LoginScreen(props) {
   
 
   const onLoginPress = () => {
-    //setStatus('Logging in...')
+    setStatus('Sending confirmation code...')
     axios.post(`${BASE_URL}/login`, {email: email, password: password, device: deviceId})
     .then((res) =>
     {
       // Credentials valid. And device is permitted
-      setStatus('success')
+      // This section runs iff they do not need to confirm their device when logging in. Right now, this is NEVER!
+      // Instead the below code in the onFulfill function will run when confirming code.
+      setStatus('Logging in...')
       props.login(res.data.token)
     })
     .catch((e) => {
@@ -94,7 +98,7 @@ export default function LoginScreen(props) {
       else if (e.response.status === 422)
       {
         // New device, code sent
-        setStatus('This seems to be a new device. Please enter the code sent to your email.')
+        setStatus('Please enter the code sent to your email.')
         setUserId(e.response.data.token)
 
         // Load UI for code entry
@@ -137,8 +141,12 @@ export default function LoginScreen(props) {
     .then((res) =>
     {
       // Login
-      setStatus('Success!')
-      onLoginPress()
+      setStatus('Logging in...')
+      props.login(userId)
+      if (res.data.trial)
+      {
+        alert("Welcome! You have been granted 50 free swipes!")
+      }
     })
     .catch((e) => {
       setStatus('Incorrect code, please try again.')
@@ -175,14 +183,14 @@ export default function LoginScreen(props) {
               buttonStyle={styles.loginButton}
               onPress={() => onLoginPress()}
               title="Login"
-              disabled={email === '' || password === ''}
+              disabled={!(isEmail.test(email) && password)}
             />
 
             <Button
               buttonStyle={styles.loginButton}
               onPress={() => onRegisterPress()}
               title="Register"
-              disabled={email === '' || password === ''}
+              disabled={!(isEmail.test(email) && password)}
             />
 
             <Text style={styles.errorText}>{status}</Text>

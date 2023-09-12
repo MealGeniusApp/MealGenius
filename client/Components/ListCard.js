@@ -1,4 +1,9 @@
-// Meal card to display on discover page
+// Meal card to display on list page
+
+// Just a rectangular card - list item
+
+// New mealview component will have title at top, back arrow, and two tabs at top for ingredients and instructions
+// Button to add to cart?
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 

@@ -1,6 +1,8 @@
 var express = require('express');
 const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
+const Trial = require("./db/trialModel");
+const cron = require('node-cron');
 var router = express.Router();
 require('dotenv').config();
 var axios = require('axios')
@@ -10,14 +12,145 @@ const nodemailer = require('nodemailer');
 // DB connection
 dbConnect()
 
-// Set up Nodemailer transporter
+// Maitenance
+cron.schedule('0 0 * * *', maintainUsers);
+cron.start()
+
+// Change password button on login page, send code, when verified, choose new password
+
+// Mailer
 const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-      user: process.env.MAILER_USER,
-      pass: process.env.MAILER_PASS,
-    },
-  });
+  service: 'Gmail',
+  auth: {
+    user: process.env.MAILER_USER,
+    pass: process.env.MAILER_PASS,
+  },
+});
+
+
+// Daily Maitenance
+// * Send warning emails
+// * Delete inactive accounts (if they arent subscribed!)
+async function maintainUsers()
+{
+  const currentDate = new Date();
+
+  // Calculate the date 10 days from now
+  const futureDate = new Date(currentDate);
+  futureDate.setDate(currentDate.getDate() + 10);
+
+  // Format the date as "Month Day, Year"
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = futureDate.toLocaleDateString('en-US', options);
+
+  // For each user, check if they have an active subscription.
+  // Active if subscription field is not '', AND passes API verification.
+  // Otherwise, not active.
+
+  // const subscribers = await User.find({ receipt: { $ne: '' } });
+
+  //   // Process each user in the result
+  //   subscribers.forEach((user) => {
+      
+  //     console.log(`Processing user ${user._id}, subscription: ${user.receipt}`);
+      
+  //     // If receipt is invalid, set tokens to 0. If it is valid, AND today is the date of subscription, reset.
+
+  //     const requestData = {
+  //       'receipt-data': user.receipt,
+  //       'password': process.env.APPLE_SECRET
+  //     };
+
+  //     axios.post('https://sandbox.itunes.apple.com/verifyReceipt', requestData)
+  //     .then(response => {
+  //       const latestReceiptInfo = response.data.latest_receipt_info[0];
+
+  //       if (latestReceiptInfo) {
+  //           const expirationDate = new Date(item.expires_date_ms);
+  //           const isSubscriptionActive = item.is_in_intro_offer_period === 'false';
+
+  //           if (isSubscriptionActive) {
+  //             console.log(`Subscription for product ${productId} is active until ${expirationDate}`);
+  //           } else {
+  //             console.log(`Subscription for product ${productId} has expired`);
+  //           }
+            
+  //       } else {
+  //         // Not a valid subscription, set tokens to 0
+  //         console.log('No latest receipt info found');
+  //       }
+  //     })
+  //     .catch(error => {
+  //       console.error('Error validating old receipt:', error);
+  //     });
+
+  //   });
+
+
+  try {
+    // Increment 'dormant' field by 1 for all users
+    await User.updateMany({}, { $inc: { dormant: 1 } });
+
+    // Find and remove users with 'marked_for_deletion' and 'email_confirmed' both set to false
+    await User.deleteMany({ marked_for_deletion: true });
+
+    // Email a warning to all inactive users
+    const dormantUsers = await User.find({
+      $and: [
+        { dormant: { $gte: 180 } },
+        { subscribed: false }
+      ]
+    });
+
+    // Send each email
+    dormantUsers.forEach((user) => {
+      
+      const mailOptions = {
+        from: process.env.MAILER_USER,
+        to: user.email,
+        subject: `MealGenius account scheduled for deletion`,
+        text: `Your MealGenius account hasn't been accessed in ${user.dormant} days, 
+        and data is scheduled to be purged from our system in 10 days on ${formattedDate}. 
+        To keep your data, simply log in to your account. We hope to see you soon!`,
+      };
+    
+      // Send the email
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log('Error sending warning email:', error);
+        } else {
+        }
+      });
+
+    });
+
+
+    // MARK UNCONFIRMED USERS FOR DELETION
+    try {
+      // Find users where 'email_confirmed' is false
+      const unconfirmedUsers = await User.find({ email_confirmed: false });
+  
+      // For all unconfirmed users prepare to mark for deletion
+      const updatePromises = unconfirmedUsers.map((user) => {
+        user.marked_for_deletion = true;
+        return user.save();
+      });
+  
+      // Execute all the update operations
+      await Promise.all(updatePromises);
+  
+    } catch (error) {
+      console.error('Error marking users for deletion:', error);
+    }
+
+
+  } catch (error) {
+    console.error('Error updating users:', error);
+  }
+}
+
+
+
 
 
 // Endpoints
@@ -25,6 +158,40 @@ const GPT_KEY = process.env.GPT_API_KEY
 
 router.get('/', (req,res) => {
     res.send('Meal Genius')
+})
+
+
+// Load the user when they log in
+// Must mark them as active, load token count, load meals etc
+router.post('/user', (req, response) => {
+  // Get the user
+  User.findByIdAndUpdate(
+    req.body.user_id,
+    {
+      $set: { dormant: 0 } // Set dormant days to 0
+    }, {new: true}).then((user) => {
+
+      if (user)
+      {
+        response.status(200).send({
+          message: "Success!",
+          user: {}
+        });
+      }
+      else
+      {
+        response.status(404).send({
+          message: "User not found!",
+        });
+      }
+    })
+    .catch((e) => {
+      response.status(500).send({
+        message: "Error finding user",
+      });
+    })
+    
+    
 })
 
 // Function to send a verification code
@@ -83,30 +250,66 @@ router.post("/confirmDevice", async (req, response) => {
 
     //let user = null
         if (user) {
-          console.log(user.code, req.body.code)
             // Check if the codes match, if so add the device
             if (user.code == req.body.code)
             {
-                // Add the device
+              // Before adding this device, check if we can activate trial tokens
+              Trial.findOne({}).then((trial_doc) => {
+
+                const emailExists = trial_doc.emails.includes(user.email);
+                const deviceExists = trial_doc.devices.includes(user.pending_device);
+                let grant_trial = true
+
+                if (emailExists)
+                {
+                  grant_trial = false
+                }
+                else
+                {
+                  trial_doc.emails.push(user.email)
+                }
+
+                if (deviceExists)
+                {
+                  grant_trial = false
+                }
+                else
+                {
+                  trial_doc.devices.push(user.pending_device)
+                }
+
+                
+
+                trial_doc.save()
+
+
+                // Confirm email / grant trial if applicable
                 User.findByIdAndUpdate(
-                    req.body.user_id,
-                    { $push: { devices: user.pending_device } },
-                    { new: true }).then((updatedUser) => {
+                  user._id,
+                  {
+                    // Grant trial if applicable
+                    $inc: { tokens: grant_trial? 50: 0 },
+                    $set: { email_confirmed: true } // Confirmed the email
+                  },
+                  { new: true }).then((updatedUser) => {
 
-                      if (updatedUser) {
+                    if (updatedUser) {
+                      response.status(200).send({
+                        message: "Success!",
+                        trial: grant_trial
+                      });
 
-                        response.status(200).send({
-                          message: "Success!",
-                        });
 
+                    } else {
+                      response.status(404).send({
+                          message: "Could not locate user",
+                      });
+                    }
 
-                      } else {
-                        response.status(404).send({
-                            message: "Could not locate user",
-                        });
-                      }
+                  })
+              })
 
-                    })
+                
                   
  
             }
@@ -212,18 +415,20 @@ router.post("/login", (request, response) => {
             console.log('Logging in..')
 
             // Now check if device is permitted
-            if (user.devices.includes(request.body.device))
+            // if (user.devices.includes(request.body.device))
+            // {
+            //     response.status(200).send({
+            //         message: "Login Successful",
+            //         token: user._id,
+            //     });
+            // }
+            // else 
             {
-                response.status(200).send({
-                    message: "Login Successful",
-                    token: user._id,
-                });
-            }
-            else 
-            {
-                console.log('not recognized')
                 // Device not recognized. Send email code to recognize device!
                 // When code is entered, allow the login and add the device to DB.
+
+                // Right now, I force code entry each time because if device was recognized, token wouldve been set in local storage!
+                // So, its safe to assume the device is unrecognized / app was reinstalled / user logged out intentionally (rare)
                 sendCode(user, request.body.device).then((res) =>
                 {
                   console.log("code sent!")
@@ -272,6 +477,7 @@ router.post('/generateMeal', (req,res) => {
     let complexity = req.body.complexity
     let blacklist = req.body.blacklist
     let history = req.body.history
+    console.log(history)
 
     let query = `give me a random ${complexity} ${meal} meal and a 20 word description. Do not include anything that contains or is related to ${blacklist}! Do not use any of the following: ${history} Your response must be in the form of FOOD: {meal} DESC: {description}`
 
