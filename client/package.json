@@ -16,6 +16,7 @@
     "expo": "~49.0.8",
     "expo-constants": "~14.4.2",
     "expo-in-app-purchases": "^14.5.0",
+    "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
     "openai": "^4.3.1",
     "react": "18.2.0",
@@ -30,8 +31,8 @@
     "react-native-progress": "^5.0.0",
     "react-native-reanimated": "~3.3.0",
     "react-native-screens": "~3.22.0",
-    "react-native-vector-icons": "^10.0.0",
-    "expo-splash-screen": "~0.20.5"
+    "react-native-unimodules": "^0.14.10",
+    "react-native-vector-icons": "^10.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

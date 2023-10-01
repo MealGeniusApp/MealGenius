@@ -57,7 +57,7 @@ const Navigation = (props) => {
       >
         <Tab.Screen name="Discover" options={{
           headerTitle: () => <CustomHeader />,
-        }} children={()=><Discover swipe={props.swipe} nextMeal = {props.nextMeal} loading = {props.loading} loadProgress = {props.loadProgress}/>}/>
+        }} children={()=><Discover swipe={props.swipe} nextMeal = {props.nextMeal} loading = {props.loading} loadProgress = {props.loadProgress} tokens = {props.tokens}/>}/>
         <Tab.Screen name="List" component={List} />
         <Tab.Screen name="Cart" component={Cart} />
         <Tab.Screen name="Preferences"

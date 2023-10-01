@@ -3,8 +3,6 @@ import {BASE_URL} from "@env"
 import axios from "axios";
 import CodeEntry from "./CodeEntry";
 
-
-import styles from "./login_style";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -12,6 +10,7 @@ import {
   TextInput,
   TouchableWithoutFeedback,
   View,
+  StyleSheet,
 } from "react-native";
 import { Button} from "react-native-elements";
 
@@ -45,6 +44,14 @@ export default function LoginScreen(props) {
   const [password, setPassword] = useState('');
   const [showCode, setShowCode] = useState(false)
 
+  const [forgotPassword, setForgotPassword] = useState(false)
+  const [canResetPass, setCanResetPass] = useState(false)
+  const [resetCode, setResetCode] = useState()
+  const [emailv1, setEmailv1] = useState('');
+  const [emailv2, setEmailv2] = useState('');
+  const [pass1, setPass1] = useState('');
+  const [pass2, setPass2] = useState('');
+
   const [status, setStatus] = useState('')
  
   
@@ -74,11 +81,16 @@ export default function LoginScreen(props) {
     getDeviceId();
   }, []);
 
-
-  
+  // Handle forgot password button press to render new state
+  const toggleForgotPassword = () => {
+    setForgotPassword(!forgotPassword)
+    if (forgotPassword)
+    {
+      setEmailv1(email)
+    }
+  }
 
   const onLoginPress = () => {
-    setStatus('Sending confirmation code...')
     axios.post(`${BASE_URL}/login`, {email: email, password: password, device: deviceId})
     .then((res) =>
     {
@@ -137,26 +149,173 @@ export default function LoginScreen(props) {
   // User inputted verification code
   const onFulfill = (code) => {
     // check with server
-    axios.post(`${BASE_URL}/confirmDevice`, {user_id: userId, code: code})
+    axios.post(`${BASE_URL}/confirmDevice`, {email: email, code: code})
     .then((res) =>
     {
-      // Login
-      setStatus('Logging in...')
-      props.login(userId)
-      if (res.data.trial)
+      // Code correct for forgot password
+      if (forgotPassword)
       {
-        alert("Welcome! You have been granted 50 free swipes!")
+        // Logic here for setting new password: new return block: SECURITY! must pass code with change request, verify again
+
+        // locally store the code that the user entered to send for more validation
+        setResetCode(code)
+        
+        setCanResetPass(true) // Show UI for setting password
+        setShowCode(false)
+        setForgotPassword(false) // hide UI for forgot password
       }
+      else 
+      {
+        // Login confirmation successful
+        setStatus('Logging in...')
+        props.login(userId)
+        if (res.data.trial)
+        {
+          alert("Welcome! You have been granted 50 free swipes!")
+        }
+      }
+      
     })
     .catch((e) => {
       setStatus('Incorrect code, please try again.')
     })
   };
+  
+  // Reset password
+  const resetPassword = () => {
+    // send code and new password as data
+    axios.post(`${BASE_URL}/setNewPassword`, {resetCode: resetCode, pass: pass1, email: email})
+    .then((res) => {
+      // force login with new password
+      props.login(res.data.token)
+
+    })
+    .catch((e) => {
+      console.log(e)
+      setStatus('Error updating password')
+    })
+  }
+
+
+  //send user code for a pass reset
+  const sendResetPassCode = () => {
+    // Send code to reset password
+    setEmail(emailv1)
+    axios.post(`${BASE_URL}/resetPassword`, {email: emailv1})
+    .then((res) =>
+    {
+      setStatus('Please enter the code sent to your email.')
+
+    // Load UI for code entry
+    setShowCode(true)
+
+    })
+    .catch((e) => {
+      
+      setStatus('Could not find user')
+    })
+    
+
+  }
 
   if (showCode)
   {
     return(
-      <CodeEntry fulfilled = {onFulfill} status = {status}></CodeEntry>
+      <CodeEntry fulfilled = {onFulfill} status = {status} ></CodeEntry>
+    )
+  }
+
+  if (canResetPass)
+  {
+    return (
+      <KeyboardAvoidingView style={styles.containerView} behavior="padding">
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.loginScreenContainer}>
+            <View style={styles.loginFormView}>
+              <Text style={styles.logoText}>Reset Password</Text>
+              <TextInput
+                placeholder="Enter new password"
+                placeholderColor="#c4c3cb"
+                secureTextEntry={true}
+                style={styles.loginFormTextInput}
+                onChangeText={(text) => {setPass1(text); setStatus((text === pass2)? '': 'Passwords must match')}}
+              />
+              <TextInput
+                placeholder="Confirm new password"
+                placeholderColor="#c4c3cb"
+                secureTextEntry={true}
+                style={styles.loginFormTextInput}
+                onChangeText={(text) => {setPass2(text); setStatus((pass1 === text)? '': 'Passwords must match')}}
+              />
+              <Button
+                buttonStyle={styles.loginButton}
+                onPress={() => resetPassword()}
+                title="Change Password"
+                disabled={!((pass1 === pass2))}
+              />
+  
+  
+  
+  
+              <Text style={styles.errorText}>{status}</Text>
+  
+  
+              <View style = {styles.bottomTextContainer}>
+                <Text onPress = {() => setCanResetPass(false)}style={styles.bottomText}>Back to Login</Text>
+              </View>
+  
+              
+  
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    )
+  }
+
+  else if (forgotPassword)
+  {
+    return (
+      <KeyboardAvoidingView style={styles.containerView} behavior="padding">
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.loginScreenContainer}>
+            <View style={styles.loginFormView}>
+              <Text style={styles.logoText}>Reset Password</Text>
+              <TextInput
+                placeholder="Email"
+                placeholderColor="#c4c3cb"
+                style={styles.loginFormTextInput}
+                onChangeText={(text) => {setEmailv1(text); setStatus((text === emailv2)? '': 'Please type the same email twice')}}
+              />
+              <TextInput
+                placeholder="Confirm Email"
+                placeholderColor="#c4c3cb"
+                style={styles.loginFormTextInput}
+                onChangeText={(text) => {setEmailv2(text); setStatus((emailv1 === text)? '': 'Please type the same email twice')}}
+              />
+              <Button
+                buttonStyle={styles.loginButton}
+                onPress={() => sendResetPassCode()}
+                title="Send Reset Link"
+                disabled={!(isEmail.test(emailv1) && isEmail.test(emailv2) && (emailv1 === emailv2))}
+              />
+  
+  
+  
+  
+              <Text style={styles.errorText}>{status}</Text>
+  
+  
+              <View style = {styles.bottomTextContainer}>
+                <Text onPress = {() => toggleForgotPassword()}style={styles.bottomText}>{(!forgotPassword? 'Forgot password': 'Login')}</Text>
+              </View>
+  
+              
+  
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     )
   }
 
@@ -193,7 +352,14 @@ export default function LoginScreen(props) {
               disabled={!(isEmail.test(email) && password)}
             />
 
+
+
             <Text style={styles.errorText}>{status}</Text>
+
+
+            <View style = {styles.bottomTextContainer}>
+              <Text onPress = {() => toggleForgotPassword()}style={styles.bottomText}>{(!forgotPassword? 'Forgot password': 'Login')}</Text>
+            </View>
 
             
 
@@ -203,3 +369,66 @@ export default function LoginScreen(props) {
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  containerView: {
+    flex: 1,
+    alignItems: "center"
+  },
+  loginScreenContainer: {
+    flex: 1,
+  },
+  logoText: {
+    fontSize: 40,
+    fontWeight: "100",
+    marginTop: 150,
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: "200",
+    marginTop: 20,
+    marginBottom: 30,
+    marginHorizontal: 40,
+    textAlign: "center",
+  },
+  loginFormView: {
+    flex: 1,
+  },
+  loginFormTextInput: {
+    height: 43,
+    fontSize: 14,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#eaeaea",
+    backgroundColor: "#fafafa",
+    paddingLeft: 10,
+    marginTop: 5,
+    marginBottom: 5,
+  },
+  loginButton: {
+    backgroundColor: "#3897f1",
+    borderRadius: 5,
+    height: 45,
+    marginTop: 10,
+    width: 350,
+    alignItems: "center"
+  },
+  container: {
+    marginTop: 50,
+    marginBottom:-50,
+  },
+  button: {
+    fontSize: 24,
+  },
+  bottomTextContainer: {
+    flex: 1, 
+    justifyContent: 'flex-end',
+    alignItems: 'center', 
+    marginBottom: 50
+  },
+  bottomText: {
+    fontSize: 16,
+  },
+});

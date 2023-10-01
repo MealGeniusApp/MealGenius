@@ -8,13 +8,15 @@ require('dotenv').config();
 var axios = require('axios')
 const bcrypt = require("bcrypt");
 const nodemailer = require('nodemailer');
+const MAX_HISTORY_LENGTH = process.env.MAX_HISTORY_LENGTH
+
 
 // DB connection
 dbConnect()
 
 // Maitenance
-cron.schedule('0 0 * * *', maintainUsers);
-cron.start()
+const job = cron.schedule('0 0 * * *', maintainUsers);
+job.start()
 
 // Change password button on login page, send code, when verified, choose new password
 
@@ -161,6 +163,25 @@ router.get('/', (req,res) => {
 })
 
 
+// Clear history
+router.post('/clearHistory', async(req, res) => {
+  try {
+    const doc = await User.findOneAndUpdate(
+      {_id: req.body.user_id}, 
+      { 'history': [] },
+      { new: true } 
+    );
+
+    if (!doc) {
+      return res.status(404).send("User not found.");
+    }
+
+    res.json(doc);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+})
+
 // Load the user when they log in
 // Must mark them as active, load token count, load meals etc
 router.post('/user', (req, response) => {
@@ -175,7 +196,8 @@ router.post('/user', (req, response) => {
       {
         response.status(200).send({
           message: "Success!",
-          user: {}
+          meals: user.meals,
+          tokens: user.tokens
         });
       }
       else
@@ -192,6 +214,105 @@ router.post('/user', (req, response) => {
     })
     
     
+})
+
+// Change the password
+router.post('/setNewPassword', async(req,res) => {
+  let code = req.body.resetCode
+  let pass = req.body.pass
+  let email = req.body.email
+
+  // Find the user 
+  let user = await User.findOne({email: email})
+
+
+      // Validate request
+      if (user && user.code == code) {
+        // user is authorized to change the password
+        // hash the password
+        bcrypt
+        .hash(pass, 5)
+        .then((hashedPassword) => {
+          // create a new user instance and collect the data
+          user.password = hashedPassword
+
+          // save the user
+          user.save()
+            // return success if the new user is added to the database successfully
+            .then((updatedUser) => {
+              res.status(200).send({
+                message: "Password changed successfully",
+                token: user._id,
+              });
+            })
+            // catch error if the new user wasn't added successfully to the database
+            .catch((errorResponse) => {
+
+                res.status(500).send({
+                  message: "Error changing password!",
+                  errorResponse,
+                });
+              
+            });
+        })
+        // catch error if the password hash isn't successful
+        .catch((e) => {
+          res.status(500).send({
+            message: "Password was not hashed successfully",
+            e,
+          });
+        });
+
+      }
+
+      else{
+        //unauthorized request
+        res.status(401)
+        res.json('Unauthorized')
+      }
+
+
+  
+})
+
+// Send reset code to email
+router.post('/resetPassword', (req, res) => {
+  const randomDecimal = Math.random();
+    const code = Math.floor(randomDecimal * 90000) + 10000;
+
+    const updateOperation = {
+        $set: {
+          code: code
+        },
+      };
+      
+      // Use findOneAndUpdate to update the user's properties
+      User.findOneAndUpdate(
+        { email: req.body.email }, // Find the user by email
+        updateOperation).then(() => {
+
+          const mailOptions = {
+            from: process.env.MAILER_USER,
+            to: req.body.email,
+            subject: `${code} is your MealGenius confirmaition code`,
+            text: `A new password was requested for your account. If this was you, enter code ${code} in the app. If not, somebody tried to log in using your email.`,
+          };
+        
+          // Send the email
+          transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.log('Error sending email:', error);
+              res.status(500)
+              res.json({error: "error sending email"})
+            } else {
+              console.log('successfully sent code')
+              res.status(200)
+              res.json('successfully sent password reset email')
+              
+            }
+          });
+        }) 
+
 })
 
 // Function to send a verification code
@@ -246,7 +367,7 @@ async function sendCode(user, device) {
 // Check the code the user provided
 router.post("/confirmDevice", async (req, response) => {
     // fetch the pending code and device id 
-    let user = await User.findById(req.body.user_id)
+    let user = await User.findOne({email: req.body.email})
 
     //let user = null
         if (user) {
@@ -288,8 +409,9 @@ router.post("/confirmDevice", async (req, response) => {
                   user._id,
                   {
                     // Grant trial if applicable
-                    $inc: { tokens: grant_trial? 50: 0 },
-                    $set: { email_confirmed: true } // Confirmed the email
+                    $inc: { tokens: grant_trial? process.env.TRIAL_SWIPES: 0 },
+                    $set: { email_confirmed: true }, // Confirmed the email
+                    $push: { devices: user.pending_device}
                   },
                   { new: true }).then((updatedUser) => {
 
@@ -414,21 +536,19 @@ router.post("/login", (request, response) => {
 
             console.log('Logging in..')
 
-            // Now check if device is permitted
-            // if (user.devices.includes(request.body.device))
-            // {
-            //     response.status(200).send({
-            //         message: "Login Successful",
-            //         token: user._id,
-            //     });
-            // }
-            // else 
+            //Now check if device is permitted
+            if (user.devices.includes(request.body.device))
+            {
+                response.status(200).send({
+                    message: "Login Successful",
+                    token: user._id,
+                });
+            }
+            else 
             {
                 // Device not recognized. Send email code to recognize device!
                 // When code is entered, allow the login and add the device to DB.
 
-                // Right now, I force code entry each time because if device was recognized, token wouldve been set in local storage!
-                // So, its safe to assume the device is unrecognized / app was reinstalled / user logged out intentionally (rare)
                 sendCode(user, request.body.device).then((res) =>
                 {
                   console.log("code sent!")
@@ -472,14 +592,58 @@ router.post("/login", (request, response) => {
   });
   
 
-router.post('/generateMeal', (req,res) => {
+router.post('/generateMeal', async(req,res) => {
     let meal = req.body.meal
     let complexity = req.body.complexity
     let blacklist = req.body.blacklist
-    let history = req.body.history
-    console.log(history)
 
-    let query = `give me a random ${complexity} ${meal} meal and a 20 word description. Do not include anything that contains or is related to ${blacklist}! Do not use any of the following: ${history} Your response must be in the form of FOOD: {meal} DESC: {description}`
+    // Load user object to get history and tokens
+    let user = await User.findById(req.body.user_id)
+    if (!user)
+    {
+        res.status(500);
+        res.json({error: "Could not load user from DB"})
+        return
+      
+    }
+    let tokens = user.tokens
+    let history = user.history
+    if (tokens == 0)
+    {
+      res.status(422);
+      res.json({error: "Insufficient tokens"})
+    }
+
+    let history_str = ""
+    if (history[meal].length)
+  {
+
+    if (history[meal].length === 1)
+    {
+      // If only one, no structuring or commas
+      history_str = history[meal][0]
+    }
+
+    else //format the string nicely
+    {
+      for (let i = 0; i < history[meal].length; i++) {
+
+        // last item
+        if (i === history[meal].length - 1 && i > 0)
+        {
+          history_str += `or ${history[meal][i]}. `
+        }
+  
+        // Non last item
+        else
+        {
+          history_str += `${history[meal][i]}, `
+        }
+      }
+    }
+  } // end history section
+
+    let query = `give me a random ${complexity} ${meal} meal and a 20 word description. Do not include anything that contains or is related to ${blacklist}! Do not use any of the following: ${history_str} Your response must be in the form of FOOD: {meal} DESC: {description}`
 
     // Result
     let title = ''
@@ -515,7 +679,7 @@ router.post('/generateMeal', (req,res) => {
 
     // Get the image for this meal
     axios.get(`https://www.google.com/search?q=${encodeURI(title)}&tbm=isch&tbs=il:cl`)
-    .then(response => {
+    .then(async response => {
       
       const htmlContent = response.data;
       const start = htmlContent.indexOf('src="https')
@@ -531,11 +695,36 @@ router.post('/generateMeal', (req,res) => {
       // console.log(image)
 
       // SUCCESS! Return details
+      
+      // History is at its max length. Remove oldest item
+      if (user.history[meal].length > MAX_HISTORY_LENGTH)
+      {
+        user.history[meal].shift()
+      }
+
+      user.history[meal].push(title);
+
+      // Decrease the tokens field by 1
+      user.tokens--;
+      
+      // Save the updated user with less tokens
+      try {
+        await user.save();
+        // Successful return 
         res.json({
-        title: title,
-        description: description,
-        image: image,
-  })
+          title: title,
+          description: description,
+          image: image,
+          tokens: user.tokens, // return true token count for server side validation
+         })
+
+      } catch (err) {
+        console.error('Error updating user after meal generation', err);
+        res.status(500);
+        res.json({error: "Error updating user tokens and history"})
+      }
+      
+     
         
     })
     .catch(error => {
@@ -544,6 +733,7 @@ router.post('/generateMeal', (req,res) => {
         title: title,
         description: description,
         image: image,
+        tokens: user.tokenes,
         })
     })
 

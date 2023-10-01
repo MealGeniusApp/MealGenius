@@ -2,28 +2,47 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import DiscoverCard from '../Components/DiscoverCard';
 import LoadingCard from '../Components/LoadingCard';
+import NoTokens from '../Components/NoTokens';
 
 const Discover = (props) => {
-    if (!props.loading)
+    // Only show meals if we have tokens
+    if (props.tokens)
     {
-        return (
-            <View>
-            <View style={styles.container}>
-                <DiscoverCard nextMeal = {props.nextMeal} swipe = {props.swipe}/>
-            </View>
-            </View>
-        
+      if (!props.loading)
+      {
+          return (
+              <View>
+              <View style={styles.container}>
+                  <DiscoverCard nextMeal = {props.nextMeal} swipe = {props.swipe}/>
+              </View>
+              <Text>{props.tokens}</Text>
+              </View>
+          
+        );
+      }
+          // Return loading screen
+      return (
+          <View>
+          <View style={styles.container}>
+              <LoadingCard progress = {props.loadProgress}/>
+          </View>
+          </View>
+      
       );
     }
-        // Return loading screen
-    return (
+    else{
+      return (
         <View>
         <View style={styles.container}>
-            <LoadingCard progress = {props.loadProgress}/>
+            <NoTokens/>
         </View>
         </View>
     
-  );
+    );
+
+
+    }
+    
     
     
 

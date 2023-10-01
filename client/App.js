@@ -7,18 +7,10 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react'
 import {BASE_URL} from "@env"
-// TODO
-// add table for all devices for keeping track of trials? Or query all users?
-// remember me?
-// if email is not confirmed in 5 mins, and account is new (devices length is 0) delete the account
+
 let breakfastQueue = []
 let lunchQueue = []
 let dinnerQueue = []
-let history = {
-  breakfast: [],
-  lunch: [],
-  dinner: [],
-}
 
 let breakfastToGenerate = 0
 let lunchToGenerate = 0
@@ -38,20 +30,15 @@ export default function App() {
   const [lunchLoaded, setLunchLoaded] = useState(false)
   const [dinnerLoaded, setDinnerLoaded] = useState(false)
 
+  const [tokens, setTokens] = useState(0)
+  const [userId, setUserId] = useState()
+  const [meals, setMeals] = useState()
+
   const [nextMeal, setNextMeal] = useState('')
 
-  
-  const MAX_HISTORY_LENGTH = 150
-
-  
-
-  const [breakfastList, setBreakfastList] = useState([])
-  const [lunchList, setLunchList] = useState([])
-  const [dinnerList, setDinnerList] = useState([])
   const DEFAULT_MEAL = 'breakfast'
   const [activeMeal, setActiveMeal] = useState(DEFAULT_MEAL)
   const [preferences, setPreferences] = useState({})
-  const [user, setUser] = useState({}) // user preferences, tokens, etc
 
   const [init, setInit] = useState(false)
   // Automatically check to see if we are logged in
@@ -165,14 +152,12 @@ export default function App() {
   const handleAppStateChange = newState => {
     if (newState === 'inactive') {
 
-      AsyncStorage.setItem('breakfast_list', JSON.stringify(breakfastList))
-      AsyncStorage.setItem('lunch_list', JSON.stringify(lunchList))
-      AsyncStorage.setItem('dinner_list', JSON.stringify(dinnerList))
-      AsyncStorage.setItem('history', JSON.stringify(history))
+      // Save the state... no need, saved in DB when swiped.
+
+      // AsyncStorage.setItem('breakfast_list', JSON.stringify(breakfastList))
+      // AsyncStorage.setItem('lunch_list', JSON.stringify(lunchList))
+      // AsyncStorage.setItem('dinner_list', JSON.stringify(dinnerList))
       
-
-      AsyncStorage.setItem('preferences', JSON.stringify(preferences))
-
     }
 
   };
@@ -190,86 +175,13 @@ export default function App() {
   }, []);
 
 
-  // Log out through preference page
-  function logOut()
-  {
-    AsyncStorage.removeItem('token')
-    setAuthenticated(false)
-  }
+  // user logged in, load queues
+  useEffect(() => {
 
-  // Clear history
-  function clearHistory()
-  {
-    AsyncStorage.removeItem('history')
-    history = {
-      breakfast: [],
-      lunch: [],
-      dinner: [],
-    }
-  }
-
-  // Meal queues
-  function scheduleMeal(meal, count)
-  {
-    // Increase the number of meals to generate
-    switch(meal)
+    if (authenticated)
     {
-      case 'breakfast':
-      {
-        breakfastToGenerate += count
-        break
-      }
-      case 'lunch':
-      {
-        lunchToGenerate += count
-        break
-      }
-      case 'dinner':
-      {
-        dinnerToGenerate += count
-        break
-      }
-    }
 
-    // Start the cycle if it was not running
-    if ( ((meal === 'breakfast'? breakfastToGenerate : meal === 'lunch'? lunchToGenerate : dinnerToGenerate) === count) || FAST_MODE)
-    {
-      // Queue was empty so must start the recursive calls
-      generateMeal(meal)
-    }
-  }
-
-  // On first load, get values from storage and restore state
-  if (init)
-  {
-    // AsyncStorage.removeItem('breakfast_queue')
-    // AsyncStorage.removeItem('lunch_queue')
-    // AsyncStorage.removeItem('dinner_queue')
-    setInit(false)
-
-    console.log('initializing')
-
-    // Load user data from DB
-    AsyncStorage.getItem('token').then(value => {
-      if (value)
-      {
-        logIn(value)
-      }
-    })
-    
-
-    // Load history from storage
-    AsyncStorage.getItem('history').then(value => {
-      if (value)
-      {
-        history = (JSON.parse(value))
-      }
-        
-        
-      // History is loaded, so load the meals now
-
-      // Initialize food items - make sure we have a stocked selection!
-
+      // Load queues up given history.
     AsyncStorage.getItem('breakfast_queue').then(value => {
       let q = JSON.parse(value)
       if (q?.length >= MIN_QUEUE_SIZE - 1)
@@ -339,32 +251,79 @@ export default function App() {
       setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
         
     });
-    })
+    }
+    
+  
 
+  }, [authenticated])
+
+
+  // Log out through preference page
+  function logOut()
+  {
+    AsyncStorage.removeItem('token')
+    setAuthenticated(false)
+  }
+
+  // Clear history
+  function clearHistory()
+  {
+    // Call api to set history
+    axios.post(`${BASE_URL}/clearHistory`, {user_id: userId})
+  }
+
+  // Meal queues
+  function scheduleMeal(meal, count)
+  {
+    // Increase the number of meals to generate
+    switch(meal)
+    {
+      case 'breakfast':
+      {
+        breakfastToGenerate += count
+        break
+      }
+      case 'lunch':
+      {
+        lunchToGenerate += count
+        break
+      }
+      case 'dinner':
+      {
+        dinnerToGenerate += count
+        break
+      }
+    }
+
+    // Start the cycle if it was not running
+    if ( ((meal === 'breakfast'? breakfastToGenerate : meal === 'lunch'? lunchToGenerate : dinnerToGenerate) === count) || FAST_MODE)
+    {
+      // Queue was empty so must start the recursive calls
+      generateMeal(meal)
+    }
+  }
+
+  // On first load, get values from storage and restore state
+  if (init)
+  {
+    setInit(false)
+
+    console.log('initializing')
+
+    // Load user data from DB
+    AsyncStorage.getItem('token').then(value => {
+      if (value)
+      {
+        logIn(value)
+      }
+    })
+    
 
     // Initialize preferences
     AsyncStorage.getItem('preferences').then(value => {
       if(value)
         setPreferences(JSON.parse(value))
     })
-
-
-    // Load cookbook items
-    AsyncStorage.getItem('breakfast_list').then(value => {
-      if(value)
-        setBreakfastList(JSON.parse(value))
-    })
-    AsyncStorage.getItem('lunch_list').then(value => {
-      if(value)
-        setLunchList(JSON.parse(value))
-    })
-    AsyncStorage.getItem('dinner_list').then(value => {
-      if(value)
-        setDinnerList(JSON.parse(value))
-    })
-
-
-    
 
 
   }
@@ -382,7 +341,9 @@ function logIn(token)
   
   axios.post(`${BASE_URL}/user`, {user_id: token})
   .then((res) => {
-    setUser(res.data.user)
+    setTokens(res.data.tokens)
+    setMeals(res.data.meals)
+    setUserId(token)
     setAuthenticated(true)
   })
   .catch((e) => {
@@ -402,6 +363,9 @@ function changeMeal(newMeal)
 // Swiped on a meal
 function swiped(right)
 {
+  // Locally decrease tokens. This is cosmetic, only.
+  setTokens(tokens - 1)
+
   // If we ran out of meals (swiping too fast! ) Show the load screen while they regenerate
   if (((activeMeal == 'breakfast')? breakfastQueue.length : (activeMeal == 'lunch')? lunchQueue.length : dinnerQueue.length) == 1)
   {
@@ -464,7 +428,6 @@ async function generateMeal(meal)
   // Gather preferences from state
   let blacklist = []
   let blacklist_str = ''
-  let history_str = ''
   let complexity_easy = 1
   let complexity_hard = 1
   let complexity_medium = 1
@@ -521,55 +484,15 @@ async function generateMeal(meal)
 
     
   }
-  if (history[activeMeal].length)
-  {
-
-    if (history[activeMeal].length === 1)
-    {
-      // If only one, no structuring or commas
-      history_str = history[activeMeal][0]
-    }
-
-    else //format the string nicely
-    {
-      for (let i = 0; i < history[activeMeal].length; i++) {
-
-        // last item
-        if (i === history[activeMeal].length - 1 && i > 0)
-        {
-          history_str += `or ${history[activeMeal][i]}. `
-        }
   
-        // Non last item
-        else
-        {
-          history_str += `${history[activeMeal][i]}, `
-        }
-      }
-    }
-  } // end history section
 
   // Execute endpoint from server
-  axios.post(`${BASE_URL}/generateMeal`, {meal: meal, complexity: complexity, blacklist: blacklist_str, history: history_str})
+  axios.post(`${BASE_URL}/generateMeal`, {meal: meal, complexity: complexity, blacklist: blacklist_str, user_id: userId})
   .then(response => {
     let description = response.data.description
     let title = response.data.title
     let image = response.data.image
 
-    //add this title to history
-    const activeMealHistory = [...history[activeMeal]];
-    activeMealHistory.push(title);
-
-    // Check to see if the length is too long now
-    if (activeMealHistory.length > MAX_HISTORY_LENGTH)
-    {
-      activeMealHistory.shift()
-    }
-
-    // Finalize and update the new history state
-    history[activeMeal] = activeMealHistory;
-
-    // Add the meal
 
     newMeal = {title: title, description: description, meal: meal, image: image, ingredients: '', instructions: ''}
           // Debug print for the generated food title
@@ -645,7 +568,7 @@ async function generateMeal(meal)
   {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Navigation clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading}></Navigation>
+        <Navigation clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
     </GestureHandlerRootView>
     );
   }
