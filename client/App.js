@@ -153,8 +153,10 @@ export default function App() {
 
   useEffect(() =>
   {
-
+    
+    // Makes sure we re-render to show the first meal: Experimental
   }, [nextMeal])
+
 
   const handleAppStateChange = newState => {
     if (newState === 'inactive') {
@@ -218,6 +220,7 @@ export default function App() {
       else // load default breakfast
       {
         breakfastQueue = defaultBreakfast
+        AsyncStorage.setItem('breakfast_queue', JSON.stringify(breakfastQueue))
         setBreakfastLoaded(true)
         setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
       }
@@ -251,6 +254,7 @@ export default function App() {
       else // load default breakfast
       {
         lunchQueue = defaultLunch
+        AsyncStorage.setItem('lunch_queue', JSON.stringify(lunchQueue))
         setLunchLoaded(true)
         setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
       }
@@ -285,6 +289,7 @@ export default function App() {
       else // load default breakfast
       {
         dinnerQueue = defaultDinner
+        AsyncStorage.setItem('dinner_queue', JSON.stringify(dinnerQueue))
         setDinnerLoaded(true)
         setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
       }
