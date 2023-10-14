@@ -91,6 +91,7 @@ export default function LoginScreen(props) {
   }
 
   const onLoginPress = () => {
+    setStatus('Attempting login...')
     axios.post(`${BASE_URL}/login`, {email: email, password: password, device: deviceId})
     .then((res) =>
     {
@@ -156,6 +157,7 @@ export default function LoginScreen(props) {
       if (forgotPassword)
       {
         // Logic here for setting new password: new return block: SECURITY! must pass code with change request, verify again
+        setStatus('')
 
         // locally store the code that the user entered to send for more validation
         setResetCode(code)
@@ -177,7 +179,30 @@ export default function LoginScreen(props) {
       
     })
     .catch((e) => {
-      setStatus('Incorrect code, please try again.')
+      if (e.response.status === 401)
+      {
+        setStatus('Incorrect code, please try again.')
+      }
+      else 
+      {
+        if (e.response.status === 429)
+        {
+          setStatus('Too many failures. Please login again.')
+        }
+        else{
+          setStatus('Error, please try again later')
+        }
+
+        // Code was not wrong, but there was an error. Return to login
+        setShowCode(false)
+        setForgotPassword(false)
+        
+
+      }
+      
+      
+
+      // If code is exhasuted, return to login
     })
   };
   
@@ -326,7 +351,7 @@ export default function LoginScreen(props) {
           <View style={styles.loginFormView}>
             <Text style={styles.logoText}>Meal Genius</Text>
             <TextInput
-              placeholder="email"
+              placeholder="Email"
               placeholderColor="#c4c3cb"
               style={styles.loginFormTextInput}
               onChangeText={(text) => {setEmail(text); setStatus('')}}

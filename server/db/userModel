@@ -21,6 +21,11 @@ code: {
     type: Number
 },
 
+code_attempts: {
+    type: Number,
+    default: 0
+},
+
 dormant: {
     // Number of days that account has not been accessed
     type: Number,

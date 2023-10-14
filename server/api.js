@@ -332,6 +332,7 @@ async function sendCode(user, device) {
         $set: {
           code: code,
           pending_device: device,
+          code_attempts: 0, // Reset failure count
         },
       };
       
@@ -371,6 +372,7 @@ router.post("/confirmDevice", async (req, response) => {
 
     //let user = null
         if (user) {
+            
             // Check if the codes match, if so add the device
             if (user.code == req.body.code)
             {
@@ -436,9 +438,41 @@ router.post("/confirmDevice", async (req, response) => {
  
             }
             else{
-              response.status(400).send({
-                message: "Wrong code!",
-                });
+
+              // If this is their third failed code
+              if (user.code_attempts >= 2)
+              {
+                // Return exhausted status
+                response.status(429).send({
+                  message: "Too many requests!",
+                  });
+
+                return
+              }
+
+              // First or second failure: Increase count and send wrong code 401
+              User.findByIdAndUpdate( user._id, { $inc: { code_attempts: 1 } },
+                { new: true }).then((updatedUser) => {
+
+                  if (updatedUser) {
+                    
+
+
+                  } else {
+                    console.log('Failed updating user document api/confirmDevice')
+                    response.status(404).send({
+                        message: "Could not locate user",
+        
+                    });
+                  }
+
+                })
+
+                // Moved to here instead of if statement so the UI response does not wait on a DB operation
+                response.status(401).send({
+                  message: "Wrong code!",
+                  });
+              
             }
     
         //console.log('Code:', user.code);
