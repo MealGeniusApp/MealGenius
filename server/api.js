@@ -8,15 +8,26 @@ require('dotenv').config();
 var axios = require('axios')
 const bcrypt = require("bcrypt");
 const nodemailer = require('nodemailer');
+const puppeteer = require('puppeteer');
 const MAX_HISTORY_LENGTH = process.env.MAX_HISTORY_LENGTH
+var page;
+var browser;
 
 
 // DB connection
+setupPuppeteer()
 dbConnect()
 
 // Maitenance
 const job = cron.schedule('0 0 * * *', maintainUsers);
 job.start()
+
+async function setupPuppeteer()
+{
+  browser = await puppeteer.launch();
+  
+}
+
 
 // Change password button on login page, send code, when verified, choose new password
 
@@ -627,6 +638,7 @@ router.post("/login", (request, response) => {
   
 
 router.post('/generateMeal', async(req,res) => {
+
     let meal = req.body.meal
     let complexity = req.body.complexity
     let blacklist = req.body.blacklist
@@ -704,73 +716,49 @@ router.post('/generateMeal', async(req,res) => {
       },
     }
   )
-  .then(response => {
+  .then(async response => {
 
     result = response.data.choices[0].message.content
 
     title = result.substring(result.toUpperCase().indexOf('FOOD:')+6,  result.toUpperCase().indexOf('DESC') - 1).replace(new RegExp('"', 'g'), '').replace(new RegExp(':', 'g'), '')
     description = result.substring(result.toUpperCase().indexOf('DESC: ') + 6, result.length)
 
-    // Get the image for this meal
+    // CSE Grab
+    const apiKey = process.env.CSE_API;
+    const cx = process.env.CSE_ID;
+
+    axios.get(`https://www.googleapis.com/customsearch/v1?q=${title}&cx=${cx}&key=${apiKey}&searchType=image`)
+    .then((response) => {
+      const image = response.data.items[0].link;
+      confirmMeal(user, meal, res,  title, description, image)
+
+    })
+    .catch(() => {
+      // No more requests: Grab google
+
+      // Google grab
     axios.get(`https://www.google.com/search?q=${encodeURI(title)}&tbm=isch&tbs=il:cl`)
     .then(async response => {
       
-      const htmlContent = response.data;
-      const start = htmlContent.indexOf('src="https')
-      const end = htmlContent.substring(start + 5, htmlContent.length).indexOf('"')
+      const haystack = response.data;
+      const start = haystack.indexOf('src="https')
+      const end = haystack.substring(start + 5, haystack.length).indexOf('"')
 
-      image = htmlContent.substring(start + 5, start + end + 5)
-      
-      // const start = htmlContent.indexOf('href="/url?q=')
-      // const end = htmlContent.substring(start + 12, htmlContent.length).indexOf('"')
-
-      // image = htmlContent.substring(start + 12, start + end + 12)
-      // console.log(htmlContent)
-      // console.log(image)
-
-      // SUCCESS! Return details
-      
-      // History is at its max length. Remove oldest item
-      if (user.history[meal].length > MAX_HISTORY_LENGTH)
-      {
-        user.history[meal].shift()
-      }
-
-      user.history[meal].push(title);
-
-      // Decrease the tokens field by 1
-      user.tokens--;
-      
-      // Save the updated user with less tokens
-      try {
-        await user.save();
-        // Successful return 
-        res.json({
-          title: title,
-          description: description,
-          image: image,
-          tokens: user.tokens, // return true token count for server side validation
-         })
-
-      } catch (err) {
-        console.error('Error updating user after meal generation', err);
-        res.status(500);
-        res.json({error: "Error updating user tokens and history"})
-      }
-      
+      image = haystack.substring(start + 5, start + end + 5)
+      confirmMeal(user, meal,  res, title, description, image)
      
+    })
+
+      
+    .catch(error => {
+      console.log("Error grabbing image: ", error)
+        // Image error, return anyway
+        confirmMeal(user, meal, res,  title, description, image)
         
     })
-    .catch(error => {
-        // Image error, return anyway
-        res.json({
-        title: title,
-        description: description,
-        image: image,
-        tokens: user.tokenes,
-        })
-    })
 
+
+    })
 
   })
   .catch(error => {
@@ -778,9 +766,41 @@ router.post('/generateMeal', async(req,res) => {
     console.log('FATAL GPT ERROR: ', error)
     res.status(500);
     res.json({error: error})
+    return
   })
 
   
 })
+
+async function confirmMeal(user, meal, res, title, description, image)
+{
+  // History is at its max length. Remove oldest item
+  if (user.history[meal].length > MAX_HISTORY_LENGTH)
+  {
+    user.history[meal].shift()
+  }
+
+  user.history[meal].push(title);
+
+  // Decrease the tokens field by 1
+  user.tokens--;
+  
+  // Save the updated user with less tokens
+  try {
+    await user.save();
+    // Successful return 
+    res.json({
+      title: title,
+      description: description,
+      image: image,
+      tokens: user.tokens, // return true token count for server side validation
+     })
+
+  } catch (err) {
+    console.error('Error updating user after meal generation', err);
+    res.status(500);
+    res.json({error: "Error updating user tokens and history"})
+  }
+}
 
 module.exports = router;
