@@ -5,8 +5,10 @@ import Login from './Components/Login';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+//import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState, useEffect } from 'react'
 import {BASE_URL} from "@env"
+import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Import the pref constants
 
 let defaultBreakfast = [{"description": "Freshly baked muffins filled with ripe bananas and crunchy walnuts, perfect for a quick and delicious breakfast.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWPj_2sReqVpPp9rKClDUO9aBw73b93oFFzQgFqbpNRSRTUZ9INH75iFiMxw&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Banana Nut Muffins "}, {"description": "A classic combination of crispy bacon, fresh lettuce, and juicy tomato sandwiched between toasted whole grain bread.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNfhQ5gmQuMOqJcxSXjZvH5tZAiaS4YTVLVKTvG4ZbisFsNCoiC-seGC7DTEg&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Breakfast BLT Sandwich"}, {"description": "Fluffy, buttery biscuit stuffed with savory sausage and gooey cheese, making for a deliciously satisfying breakfast on-the-go.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSfsjQo3BGpqra5BmBVsUHAvPWvNB0Xa7-2vD6iNvmedBhG8_1pCSuLLWJRw&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Sausage and Cheese Biscuit"}, {"description": "A puffy and golden baked pancake with a crispy edge, served with powdered sugar and fresh berries.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmgyXazQTE11OqqH17-PDjivT4L4RXHBMwBVbSq94tB1UsnY88JAc8JlVcSg&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Dutch Baby Pancake"}, {"description": "A hearty bowl of cooked quinoa topped with fresh berries, slivered almonds, and drizzled with a touch of honey.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDzGZKhBjKWcv8RSfBFjxBDfP6nL4bSxJ8R_L4CbIxsqhGuQ6KhvYlekSZtpU&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Quinoa Breakfast Bowl "}, {"description": "Crunchy mix of oats, nuts, and dried fruits, topped with creamy yogurt and drizzled with honey for a wholesome morning treat.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQykvQu9dyB1FrPS-Ja18SGUXngZwGoXjsWX0AFWN9gDJ4dlluNffLx2cnXsw&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Granola Bowl "}, {"description": "A flavorful combination of turkey sausage, scrambled eggs, and melted cheese wrapped in a warm whole wheat tortilla.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXdLy2eEYAbwEFgdXb9CDJ1tWOa7DyVzqwKUITJ5bO8W-XdWj_2DneuH56Vik&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Turkey Sausage Wrap"}, {"description": "Fluffy and flavorful egg dish loaded with sautéed vegetables, gooey melted cheese, and a hint of aromatic herbs.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSivTu_Ld0vGnDkhQN6m1YoTz09DI3n4eLUz4Eq9T3faLx0AzW2XuxbggjwUWY&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Breakfast Frittata "}, {"description": "Indulge in crispy yet soft Liege waffles, studded with crunchy pearl sugar and a dusting of powdered sugar.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsIgx_Lb8483MiVR7s4hQBWvbwdiZfoDLjgzvOnu4B9GfMLgkffrwRuYzKdA&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Belgian Liege Waffles "}, {"description": "A savory combination of scrambled eggs, melted cheddar cheese, crispy bacon, and fresh vegetables, served on a toasted bagel.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3htN83dF6qbOfoEOXX1ZZq9A5gl6VoIaqsujS31Z5UQi_G1NUFV5jM9EByg&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Breakfast Bagel Sandwich"}, {"description": "A Middle Eastern dish consisting of poached eggs in a savory tomato and bell pepper sauce, flavored with spices.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLqilIrE-GWGi3J2uv4-oMyCC9eWBVGvn4YStaojmfc-Woqk8wP3lbQwpARw&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Shakshouka "}, {"description": "Fluffy and flavorful frittata loaded with fresh spinach and creamy feta cheese, perfect for a nourishing breakfast.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFZNsClga-tRV08IMqPd1j2urWl0cPbqMT-wotzBPcCJb1vdgEgLfIi7LMpjA&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Spinach and Feta Frittata "}, {"description": "A savory combination of crispy corned beef, diced potatoes, and onions, all cooked to perfection on a griddle.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqr6BMBaFpJ1iXyuZARjaJKAFvgPxvZY5jzL7SPPwoZvBrsq0QzTX4fwv-iA&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Corned Beef Hash"}, {"description": "A flavorful mix of scrambled eggs, diced chorizo, sautéed peppers and onions, topped with melted cheese and served with toasted bread.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0KUVutPdzny4v75mjAJ21ejhsAQCBco6LWKgiuQ2Ux0QHlICavSQuHKf-gA&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Chorizo Scramble "}, {"description": "Creamy oats infused with sweet strawberry flavor, topped with fresh berries and a sprinkle of crunchy granola.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQN0sIznMpb_1-L7C3nPu9Ya5d6-inuyZ9pBWZDTtXhH_xzrqDUqN1C1y9u2uA&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Strawberry Overnight Oats "}, {"description": "Warm, cinnamon-spiced baked apples topped with crunchy granola for a comforting and healthy breakfast treat.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvpU8tE3DWq1yD1FRRXnnGdG9sZQP5Idr_7ggKsk4fA9N_yv9f08zl2QQkyns&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Baked Apples with Granola Topping "}, {"description": "Creamy and comforting porridge made with fragrant coconut milk, topped with toasted coconut flakes and a sprinkle of cinnamon.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3DiKMcchfhIOlRQQe-Zd3-lauZNaFBkWoRFQ7nvxbnCy5j-6mfSFwx21Qvyo&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Coconut Rice Porridge "}, {"description": "Creamy oatmeal topped with sliced bananas, crunchy almond slices, and a drizzle of honey for a wholesome start to your day.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcx_HJMCEsVIUjkcigry4QK7y5130Z7btnlocbZm3G5KW1aQdCrnKnjgTFxQ&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Oatmeal Bowl "}, {"description": "A flaky and buttery pastry filled with a mix of dried fruits and nuts, perfect with a cup of coffee.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ9fA-qxHfB65CXhXqZ9Qsc0mhpk_tNDtHOzV6wI7qumr2AGHOBHkFAAQLhmEM&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Breakfast Scone "}, {"description": "Layers of creamy yogurt, crunchy granola, and fresh mixed berries, creating a delightful and nutritious morning treat.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1GqtRa-C8QVftxVwpVPfCovQnjg9s87V51Ae-XUIiEdHeqtvw1ka881ewKjs&amp;s", "ingredients": "", "instructions": "", "meal": "breakfast", "title": "Breakfast Parfait "}]
 let defaultLunch = [{"description": "A classic Italian dish featuring al dente spaghetti tossed with crispy pancetta, creamy egg sauce, and grated Parmesan cheese.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTs73ixFaEvuVtE0nt4fAyUVbB1cW8815xDC06o1Yy7MoYErx4orFAmwGjVIw&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Spaghetti Carbonara "}, {"description": "A colorful bowl filled with a mix of roasted veggies, quinoa, chickpeas, and a creamy tahini dressing.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8mhoEWQWmI07qNNBAQh3zJR4cU8IGV0ejMRnaYr3zUm32LrwSfoG3G0RoYJQ&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Vegetarian Buddha Bowl"}, {"description": "Succulent salmon glazed with teriyaki sauce, served over a bed of steamed rice and accompanied by sautéed vegetables.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxJ2_VCzHfOaWoj_ctXIKBO9EVdLKAOlzt0MpElHbSKBPKcHm2OuPjaZzADg&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Teriyaki Salmon Bowl"}, {"description": "A deliciously aromatic and spicy curry with a perfect balance of coconut milk, tender chicken, fresh vegetables, and fragrant herbs.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG_nwo5u2Pv5BbSIt8G5eSG442qryhH3U40ScWQ24Jc7eBvm-1tb2sF6j7y4Y&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Thai Green Curry"}, {"description": "A colorful bowl of mixed vegetables, marinated beef, and a sunny-side-up egg, served over a bed of steaming hot rice.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTExC-evPEiDOZd8mRpr7dkBIv00DGXyyy5ZbH5AvJfFWEybiDySdGH2yI-LkY&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Korean Bibimbap"}, {"description": "Tender, slow-cooked pork smothered in smoky BBQ sauce, served on a soft bun with tangy coleslaw. A mouthwatering flavor explosion!", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtjO2cp6IXuM04B3nI2JCrrvRLhznS5RS8eTK4oJPTgCAtXrq5HOSuSdLo51E&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "BBQ Pulled Pork Sandwich "}, {"description": "A delectable wrap filled with succulent grilled chicken, crisp romaine lettuce, Parmesan cheese, and creamy Caesar dressing.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlFyXdkQ4RwlzzIl7kcBARqUStC-SnuPbPJQF7U4a3yRYz0IwdGSni38JXhNY&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Chicken Caesar Wrap"}, {"description": "A refreshing mix of diced raw fish, rice, and tropical fruits, seasoned with soy sauce and sesame oil.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSN-n6DQEr8Y4JK394X82WL6_EXbip1P3zgf63-2RCgluMGiWtK413xOKUQvDw&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Hawaiian Poke Bowl"}, {"description": "Soft corn tortillas filled with savory grilled steak, fresh cilantro, tangy pickled onions, and a squeeze of lime. Satisfying and full of flavor.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRiT849AVLwSFuXQrf21UcBJVDguE5Bk96pRfcbgrjfzP-VM3gLSNZEr_Tmzg&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Mexican Street Tacos"}, {"description": "A light and crispy flatbread topped with tangy hummus, juicy tomatoes, refreshing cucumbers, and zesty feta cheese.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSB52nuywPqK-dzKg-ebjQPppyZOhL7T3JF4MvDKmKDLxMZZ5SG5CxwufMi3g&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Mediterranean Flatbread"}, {"description": "Savor the perfect balance of flavors in this fiery stir-fry featuring tofu, mixed vegetables, and a spicy soy-based sauce.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSW0VqxOeAjJhhvXtIZRBZbDZGv49A44EcKc3DQvK5JjWYgk_EEihEwAbLrRww&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Spicy Tofu Stir-Fry"}, {"description": "Crispy white fish, topped with tangy slaw and spicy mayo, wrapped in warm tortillas for a zesty lunch.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThSix0Ng7RINnKjmT1KwBn1V_iCVP9Hett2j-twvCff-AroAh1DflJw0hyPQ&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Fish Tacos"}, {"description": "A juicy beef patty topped with melted cheese, crispy bacon, and tangy BBQ sauce, served on a freshly toasted bun.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzNrXCs3ExfT12rtzD90PsW0KP9mmLOwsai4cQh43b22h2q0dfZuu6zfCX_lU&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "BBQ Bacon Cheeseburger"}, {"description": "Juicy and tender marinated chicken, wrapped in warm pita bread with a refreshing combination of tomatoes, cucumbers, and tzatziki sauce.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWxwgrUOrBz4PgSgLvkHNekZC1yiEAe_gYvVliWc3-TzxjsKY2Wq-b60yJVqM&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Chicken Shawarma "}, {"description": "A spicy and tangy Thai soup made with lemongrass, lime leaves, and a variety of fresh vegetables.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSnzqYPaWdG4kNsB-uJta5jXXbzQ14keLL1byaHhfWaIbFBYdBEuilj2DnBA&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Tom Yum Soup"}, {"description": "A satisfying bowl of fluffy brown rice, topped with tender tofu in a savory teriyaki sauce, accompanied by steamed broccoli and carrots.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStyrRAuscjqq35ziVt9gZmgyvnkkcXy8CjF1bN2xJ9xzJuA248QM45-U6-Xg&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Teriyaki Tofu Bowl"}, {"description": "Tender breaded chicken cutlets smothered in marinara sauce, melted cheese, and served over a bed of spaghetti.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0UxtGJ9EA4SWEqFnLaiTFu1PV0AEk98lzL4vecBeqRgmHN0hoENWD3uxIBw&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Chicken Parmesan"}, {"description": "Vibrant assortment of sautéed vegetables tossed in a savory soy-ginger sauce, served over steamed rice. A healthy and flavorful lunch option.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9KZYrOHsymmShLamxxKmEZxeWx1SRoXlfg6wmOYQ_GYmeokIjJBmMQQR_eXE&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Vegetable Stir-Fry"}, {"description": "A classic sandwich with crispy bacon, fresh lettuce, and juicy tomatoes, all layered between toasted bread.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3fBLlf5AVZqjTo6ynmZG3C85MlKZeRoZ4e5NXaE44XgvMZUb7WnGFwKf_JA&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "BLT Sandwich"}, {"description": "A fragrant blend of fluffy couscous, tender chickpeas, sautéed vegetables, and warm Moroccan spices, bursting with vibrant and exotic flavors.", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCh-5HTOGe49xCkxJbqnD_11nF6HKjguVslUgouIKatWdglVkoqPkGVCK2NA&amp;s", "ingredients": "", "instructions": "", "meal": "lunch", "title": "Moroccan Couscous"}]
@@ -25,8 +27,6 @@ export default function App() {
 
   const [authenticated, setAuthenticated] = useState(false)
   
-  // Don't wait for history to be updated between swipes. Faster, less varied
-  const FAST_MODE = false
 
   // Stateful progress monitors stateless queues and sends data to loading screen for real-time analytics.
   const [progress, setProgress] = useState(0)
@@ -48,7 +48,7 @@ export default function App() {
   // Automatically check to see if we are logged in
   const [preInit, setPreInit] = useState(true)
   const [loading, setLoading] = useState(true)
-  const MIN_QUEUE_SIZE = 20
+  const MIN_QUEUE_SIZE = 12
 
   // When we authenticate, initialize.
   useEffect(() =>
@@ -183,6 +183,27 @@ export default function App() {
     };
   }, []);
 
+  // Force regeneration of all meals
+  function refreshMeals()
+  {
+    setLoading(true)
+    AsyncStorage.removeItem('breakfast_queue')
+    breakfastQueue = []
+    setBreakfastLoaded(false)
+    scheduleMeal('breakfast', (MIN_QUEUE_SIZE ))
+
+    AsyncStorage.removeItem('lunch_queue')
+    lunchQueue = []
+    setLunchLoaded(false)
+    scheduleMeal('lunch', (MIN_QUEUE_SIZE ))
+
+    AsyncStorage.removeItem('dinner_queue')
+    dinnerQueue = []
+    setDinnerLoaded(false)
+    scheduleMeal('dinner', (MIN_QUEUE_SIZE ))
+
+  }
+
 
   // user logged in, load queues
   useEffect(() => {
@@ -261,6 +282,8 @@ export default function App() {
       
     });
 
+    
+
     AsyncStorage.getItem('dinner_queue').then(value => {
       let q = JSON.parse(value)
       if (q)
@@ -313,7 +336,7 @@ export default function App() {
   function clearHistory()
   {
     // Call api to set history
-    axios.post(`${BASE_URL}/clearHistory`, {user_id: userId})
+    return axios.post(`${BASE_URL}/clearHistory`, {user_id: userId})
   }
 
   // Meal queues
@@ -340,11 +363,20 @@ export default function App() {
     }
 
     // Start the cycle if it was not running
-    if ( ((meal === 'breakfast'? breakfastToGenerate : meal === 'lunch'? lunchToGenerate : dinnerToGenerate) === count) || FAST_MODE)
+    if ( ((meal === 'breakfast'? breakfastToGenerate : meal === 'lunch'? lunchToGenerate : dinnerToGenerate) === count) || getPref(P_FAST, false))
     {
       // Queue was empty so must start the recursive calls
       generateMeal(meal)
     }
+  }
+
+  // Get the preference or return default
+  function getPref(pref, fallback)
+  {
+    let res = preferences[pref]
+    if (typeof res === 'undefined')
+      return fallback
+    return res
   }
 
   // On first load, get values from storage and restore state
@@ -364,6 +396,7 @@ export default function App() {
     
 
     // Initialize preferences
+    // Prefs are to be saved after modifying one: set state variable and store
     AsyncStorage.getItem('preferences').then(value => {
       if(value)
         setPreferences(JSON.parse(value))
@@ -371,6 +404,13 @@ export default function App() {
 
 
   }
+
+// Saves the new preferences dictionary
+function savePreferences(prefs)
+{
+  setPreferences(prefs)
+  AsyncStorage.setItem('preferences', JSON.stringify(prefs))
+}
 
 // middleware Login from login screen: Must set token because it definitely is not set
 function loggedIn(token)
@@ -392,6 +432,7 @@ function logIn(token)
   })
   .catch((e) => {
     console.log('Error in logIn app.js: ', e)
+    
   })
 }
 
@@ -469,12 +510,12 @@ function learnMeal(meal)
 
 async function generateMeal(meal)
 {
+  console.log('Generating a meal...')
   // Gather preferences from state
-  let blacklist = []
-  let blacklist_str = ''
-  let complexity_easy = 1
-  let complexity_hard = 1
-  let complexity_medium = 1
+  let requests = getPref(P_SPECIAL, 'None')
+  let complexity_easy = getPref(P_EASY, true)? 1: 0
+  let complexity_hard = getPref(P_MED, true)? 1: 0
+  let complexity_medium = getPref(P_HARD, true)? 1: 0
 
   let complexity = ''
 
@@ -493,45 +534,15 @@ async function generateMeal(meal)
 
     if (complexity_hard)
     {
-      complexity += (complexity)? ' or hard': 'hard'
+      complexity += (complexity)? ' or complex': 'complex'
     }
     
   }
 
-  if (blacklist.length)
-  {
-    
-
-    if (blacklist.length === 1)
-    {
-      // If only one, no structuring or commas
-      blacklist_str = blacklist[0]
-    }
-
-    else //format the string nicely
-    {
-      for (let i = 0; i < blacklist.length; i++) {
-
-        // last item
-        if (i === blacklist.length - 1 && i > 0)
-        {
-          blacklist_str += `or ${blacklist[i]}`
-        }
-  
-        // Non last item
-        else
-        {
-          blacklist_str += `${blacklist[i]}, `
-        }
-      }
-    }
-
-    
-  }
   
 
   // Execute endpoint from server
-  axios.post(`${BASE_URL}/generateMeal`, {meal: meal, complexity: complexity, blacklist: blacklist_str, user_id: userId})
+  axios.post(`${BASE_URL}/generateMeal`, {meal: meal, complexity: complexity, requests: requests, user_id: userId})
   .then(response => {
     let description = response.data.description
     let title = response.data.title
@@ -611,9 +622,9 @@ async function generateMeal(meal)
   if (authenticated)
   {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Navigation clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
-    </GestureHandlerRootView>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Navigation refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+        </GestureHandlerRootView>
     );
   }
   return(

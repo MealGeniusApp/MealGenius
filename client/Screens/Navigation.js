@@ -61,7 +61,7 @@ const Navigation = (props) => {
         <Tab.Screen name="List" component={List} />
         <Tab.Screen name="Cart" component={Cart} />
         <Tab.Screen name="Preferences"
-        children={()=><Preferences clearHistory = {props.clearHistory} logout={props.logout}/>} />
+        children={()=><Preferences refreshMeals = {props.refreshMeals} prefs = {props.prefs} setFastMode = {props.setFastMode} savePreferences = {props.savePreferences} clearHistory = {props.clearHistory} logout={props.logout}/>} />
       </Tab.Navigator>
     </NavigationContainer>
   );

@@ -102,7 +102,7 @@ export default function LoginScreen(props) {
       props.login(res.data.token)
     })
     .catch((e) => {
-      console.log(e)
+      setStatus('Error, please try again')
       if (e.response.status === 400)
       {
         // Incorrect password

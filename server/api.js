@@ -8,25 +8,16 @@ require('dotenv').config();
 var axios = require('axios')
 const bcrypt = require("bcrypt");
 const nodemailer = require('nodemailer');
-const puppeteer = require('puppeteer');
 const MAX_HISTORY_LENGTH = process.env.MAX_HISTORY_LENGTH
-var page;
-var browser;
 
 
 // DB connection
-setupPuppeteer()
 dbConnect()
 
 // Maitenance
 const job = cron.schedule('0 0 * * *', maintainUsers);
 job.start()
 
-async function setupPuppeteer()
-{
-  browser = await puppeteer.launch();
-  
-}
 
 
 // Change password button on login page, send code, when verified, choose new password
@@ -179,7 +170,7 @@ router.post('/clearHistory', async(req, res) => {
   try {
     const doc = await User.findOneAndUpdate(
       {_id: req.body.user_id}, 
-      { 'history': [] },
+      { 'history': {"breakfast": [], "lunch": [], "dinner": []} },
       { new: true } 
     );
 
@@ -641,7 +632,7 @@ router.post('/generateMeal', async(req,res) => {
 
     let meal = req.body.meal
     let complexity = req.body.complexity
-    let blacklist = req.body.blacklist
+    let requests = req.body.requests
 
     // Load user object to get history and tokens
     let user = await User.findById(req.body.user_id)
@@ -654,7 +645,7 @@ router.post('/generateMeal', async(req,res) => {
     }
     let tokens = user.tokens
     let history = user.history
-    if (tokens == 0)
+    if (tokens <= 0)
     {
       res.status(422);
       res.json({error: "Insufficient tokens"})
@@ -689,8 +680,8 @@ router.post('/generateMeal', async(req,res) => {
     }
   } // end history section
 
-    let query = `give me a random ${complexity} ${meal} meal and a 20 word description. Do not include anything that contains or is related to ${blacklist}! Do not use any of the following: ${history_str} Your response must be in the form of FOOD: {meal} DESC: {description}`
-
+    let query = `give me a random ${complexity} ${meal} meal and a 20 word description. Do not use any of the following: ${history_str} You must follow these additional requests: ${requests}. Your response must be in the form of FOOD: {meal} DESC: {description}`
+    //console.log(query)
     // Result
     let title = ''
     let description = ''
