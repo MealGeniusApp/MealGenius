@@ -505,6 +505,15 @@ function swiped(right)
 // Learn a meal - when swiped right, gather instructions and ingredients, and when done, add to cookbook
 function learnMeal(meal)
 {
+  // Input to api: meal
+  // Response: ingredients and instructions
+  axios.post(`${BASE_URL}/learnMeal`, {meal: meal, uid: userId})
+  .then((response) => {
+    let learnedMeal = response.data.meal
+  })
+  .catch(()=> {
+    alert("Sorry, there was an error learning the meal")
+  })
 
 }
 

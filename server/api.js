@@ -626,6 +626,82 @@ router.post("/login", (request, response) => {
         });
       });
   });
+
+// Learn the meal
+router.post('/learnMeal', async(req,res) => {
+  let meal = req.body.meal
+  let uid = req.body.uid
+
+  // Load user object to update meals array
+  let user = await User.findById(uid)
+  if (!user)
+  {
+      res.status(500);
+      res.json({error: "Could not load user from DB"})
+      return
+    
+  }
+
+  // Form a message to ask chatGPT
+  let query = `Give me a list of instructions and ingredients for ${meal.title}: ${meal.description}. Your response must be structured in this way: INGREDIENTS: {numbered list of ingredients} INSTRUCTIONS: {numbered list of instructions}. Do not exceed 200 words in your combined response.`
+
+  const endpoint = 'https://api.openai.com/v1/chat/completions';
+
+const messages = [
+  { role: 'user', content: query },
+];
+
+axios.post(
+  endpoint,
+  {
+    model: 'gpt-3.5-turbo',
+    messages: messages,
+  },
+  {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${GPT_KEY}`,
+    },
+  }
+)
+.then(async response => {
+
+  result = response.data.choices[0].message.content
+
+  meal.ingredients = result.substring(result.toUpperCase().indexOf('IGREDIENTS:')+ 14,  result.toUpperCase().indexOf('INSTRUCTIONS') - 1)
+  meal.instructions = result.substring(result.toUpperCase().indexOf('INSTRUCTIONS:') + 14, result.length)
+
+  // Confirm the learned meal
+  user.meals[meal.meal].push(meal);
+
+  // NOTE: I am not charging a token for this
+  // Decrease the tokens field by 1
+  // user.tokens--;
+  
+  // Save the updated user 
+  try {
+    await user.save();
+    // Successful return 
+    res.json({
+      meal: meal
+     })
+
+  } catch (err) {
+    console.error('Error updating user after learning meal', err);
+    res.status(500);
+    res.json({error: "Error updating user after learning meal"})
+  }
+})
+.catch(error => {
+  // gpt error: server issue, not client issue
+  console.log('FATAL GPT ERROR: ', error)
+  res.status(500);
+  res.json({error: error})
+  return
+})
+  
+
+})// endpoint end learnMeal
   
 
 router.post('/generateMeal', async(req,res) => {
