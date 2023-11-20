@@ -627,6 +627,103 @@ router.post("/login", (request, response) => {
       });
   });
 
+// Retrieve a list of all saved meals
+router.post('/getMeals', async(req,res) => {
+  let cart = req.body.cart // Only want to get shopping cart meals
+  let uid = req.body.uid // The user whose meals to get
+
+  // Load user object to read meals array
+  let user = await User.findById(uid)
+  if (!user)
+  {
+      res.status(500);
+      res.json({error: "Could not load user from DB"})
+      return
+    
+  }
+
+  // If we only want to get items in the cart
+  if (cart)
+  {
+    const filteredMeals = user.meals
+      .flatMap(category => category.items)
+      .flatMap(item => item.subitems)
+      .filter(subitem => subitem.cart === false);
+
+    res.json({ meals: filteredMeals });
+  }
+
+  res.json({meals: user.meals})
+
+})
+
+// Delete meal from DB
+router.post('/forgetMeal', async (req, res) => {
+  try {
+    const meal = req.body.meal;
+    const uid = req.body.uid;
+
+    // Load user object to update meals array
+    const user = await User.findById(uid);
+    
+    if (!user) {
+      res.status(500);
+      res.json({ error: "Could not load user from DB" });
+      return;
+    }
+
+    // Remove the meal
+    const updatedMeals = user.meals[meal.meal].filter(userMeal => userMeal.date !== meal.date);
+    user.meals[meal.meal] = updatedMeals;
+
+    // Save the updated user document
+    await user.save();
+
+    res.status(200).json({ message: "Meal removed successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Cart the meal
+router.post('/cartMeal', async (req, res) => {
+  try {
+    const meal = req.body.meal;
+    const uid = req.body.uid;
+
+    // Load user object to update meals array
+    const user = await User.findById(uid);
+    
+    if (!user) {
+      res.status(500);
+      res.json({ error: "Could not load user from DB" });
+      return;
+    }
+
+    let meals = user.meals[meal.meal]
+
+    let newMeals = meals.map(item => {
+      if (item.date === meal.date) {
+        return { ...item, cart: !(meal.cart) };
+      }
+      return item;
+    });
+
+    user.meals[meal.meal] = newMeals
+
+
+    // Save the updated user document
+    await user.save();
+
+    res.status(200).json({ message: "Meal carted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
 // Learn the meal
 router.post('/learnMeal', async(req,res) => {
   let meal = req.body.meal
