@@ -17,7 +17,7 @@ const Tab = createBottomTabNavigator();
 const Navigation = (props) => {
 
   // Custom header for meals: meal swap handled here
-  const DiscoverHeader = () => {
+  const CustomHeader = ({type}) => {
 
     function capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
@@ -29,30 +29,12 @@ const Navigation = (props) => {
   
     return (
       <TouchableOpacity onPress={handleTitlePress}>
-        <Text style = {{fontWeight: 'bold', fontSize: 17}}>{`Discover ${capitalizeFirstLetter(props.mealTitle)}`}</Text>
+        <Text style = {{fontWeight: 'bold', fontSize: 17}}>{ `${type} ${capitalizeFirstLetter(props.mealTitle)}`}</Text>
       </TouchableOpacity>
     );
   };
 
 
-
-  // Custom header for meals: meal swap handled here
-  const ListHeader = () => {
-
-    function capitalizeFirstLetter(string) {
-      return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-  
-    const handleTitlePress = () => {
-      props.changeMeal(props.mealTitle === 'breakfast'? 'lunch': props.mealTitle === 'lunch'? 'dinner': 'breakfast')
-    };
-  
-    return (
-      <TouchableOpacity onPress={handleTitlePress}>
-        <Text style = {{fontWeight: 'bold', fontSize: 17}}>{`Saved ${capitalizeFirstLetter(props.mealTitle)}`}</Text>
-      </TouchableOpacity>
-    );
-  };
   
   return (
     <NavigationContainer>
@@ -76,15 +58,20 @@ const Navigation = (props) => {
       })}
       >
         <Tab.Screen name="Discover" options={{
-          headerTitle: () => <DiscoverHeader />,
+          headerTitle: () => <CustomHeader type = "Discover" />,
         }} children={()=><Discover swipe={props.swipe} nextMeal = {props.nextMeal} loading = {props.loading} loadProgress = {props.loadProgress} tokens = {props.tokens}/>}/>
         <Tab.Screen name="List" options={{
-          headerTitle: () => <ListHeader />,
+          headerTitle: () => <CustomHeader type= "Saved"/>,
         }}
 
         children={()=><List forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
     
-        <Tab.Screen name="Cart" component={Cart} />
+      <Tab.Screen name="Cart" options={{
+          headerTitle: () => <CustomHeader type = "Shopping"/>,
+        }}
+
+        children={()=><Cart forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
+    
         <Tab.Screen name="Preferences"
         children={()=><Preferences refreshMeals = {props.refreshMeals} prefs = {props.prefs} setFastMode = {props.setFastMode} savePreferences = {props.savePreferences} clearHistory = {props.clearHistory} logout={props.logout}/>} />
       </Tab.Navigator>

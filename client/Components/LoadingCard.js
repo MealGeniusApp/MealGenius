@@ -20,7 +20,7 @@ const LoadingCard = (props) => {
       <Progress.Bar progress={props.progress} width={200} />
 
       <View style = {styles.bottomTextContainer}>
-        <Text style={styles.bottomText}>Tired of waiting? Enabling Fast Mode in Preferences will load food quicker, but with less variation.</Text>
+        <Text style={styles.bottomText}>This should only take a minute.</Text>
       </View>
 
     </View>

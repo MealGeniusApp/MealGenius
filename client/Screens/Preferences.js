@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, TextInput, TouchableWithoutFeedback, Keyboard, Switch, TouchableOpacity } from 'react-native';
+import { View, Text, Button, StyleSheet, TextInput, TouchableWithoutFeedback, Keyboard, Switch, TouchableOpacity, Alert } from 'react-native';
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from '../PrefTypes'; // Import the pref constants
 import { useNavigation } from '@react-navigation/native';
 
@@ -30,22 +30,59 @@ const Preferences = (props) => {
     };
 
     const handleLogout = () => {
-      props.logout();
+      // Show confirmation dialog before logging out
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to log out?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'OK', onPress: () => props.logout() },
+        ],
+        { cancelable: false }
+      );
     };
-
+  
     const handleRefreshMeals = () => {
-      props.refreshMeals();
-      navigation.navigate('Discover')
+      // Show confirmation dialog before refreshing meals
+      Alert.alert(
+        'Refresh Meals',
+        'Are you sure you want to refresh meals?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'OK',
+            onPress: () => {
+              props.refreshMeals();
+              navigation.navigate('Discover');
+            },
+          },
+        ],
+        { cancelable: false }
+      );
     };
-
+  
     const handleClearHistory = () => {
-      props.clearHistory()
-        .then((res) => {
-          alert("Success!");
-        })
-        .catch((e) => {
-          alert("There was an error");
-        });
+      // Show confirmation dialog before clearing history
+      Alert.alert(
+        'Clear History',
+        'Are you sure you want to clear history?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'OK',
+            onPress: () => {
+              props.clearHistory()
+                .then((res) => {
+                  alert('Success!');
+                })
+                .catch((e) => {
+                  alert('There was an error');
+                });
+            },
+          },
+        ],
+        { cancelable: false }
+      );
     };
 
     // Call to update the preference and save it to async storage.
@@ -74,7 +111,7 @@ const Preferences = (props) => {
               onChangeText={handleTextChange}
             />
 
-            <View style={styles.switch}>
+            {/* <View style={styles.switch}>
               <Text style={{ fontSize: 16 }}>Fast Mode</Text>
               <Switch
                 value={fastMode}
@@ -83,7 +120,7 @@ const Preferences = (props) => {
                   setPref(P_FAST, !fastMode);
                 }}
               />
-            </View>
+            </View> */}
 
             <Text style={styles.title}>Permitted Complexities</Text>
             <View>
@@ -118,6 +155,9 @@ const Preferences = (props) => {
                 />
               </View>
             </View>
+            <Text style = {{textAlign: 'center', fontWeight: 'bold'}}>Tips</Text>
+            <Text style = {{textAlign: 'center',fontSize: 11}}>In the List & Cart tabs, long press the left side of an item to delete it.</Text>
+            <Text style = {{textAlign: 'center',fontSize: 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity

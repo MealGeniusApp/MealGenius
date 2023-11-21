@@ -15,7 +15,6 @@ const Discover = (props) => {
               <View style={styles.container}>
                   <DiscoverCard nextMeal = {props.nextMeal} swipe = {props.swipe}/>
               </View>
-              <Text>{props.tokens}</Text>
               </View>
           
         );
