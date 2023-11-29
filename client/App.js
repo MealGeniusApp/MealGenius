@@ -7,7 +7,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 //import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState, useEffect } from 'react'
-import {BASE_URL} from "@env"
+import {BASE_URL, APPL_API, GOOG_API} from "@env"
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Import the pref constants
 
 //import {Purchases} from 'react-native-purchases';
@@ -431,11 +431,11 @@ function logIn(token)
     // Allow purchasing subscriptions
     if (Platform.OS === 'ios')
     {
-      //await Purchases.configure({apiKey: 'appl_iymEcrjJXGyUyYLMNqGXZYiaKvP', appUserID: token})
+      //await Purchases.configure({apiKey: APPL_API, appUserID: token})
     }
     else
     {
-      //await Purchases.configure({apiKey: 'goog_NxhhAZhHJkJSHDfsFAPtYIyEClP', appUserID: token})
+      //await Purchases.configure({apiKey: GOOG_API, appUserID: token})
     }
 
     setAuthenticated(true)
