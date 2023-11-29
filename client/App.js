@@ -1,5 +1,5 @@
 
-import {AppState } from 'react-native';
+import {AppState, Platform } from 'react-native';
 import Navigation from './Screens/Navigation';
 import Login from './Components/Login';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -9,6 +9,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react'
 import {BASE_URL} from "@env"
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Import the pref constants
+
+//import {Purchases} from 'react-native-purchases';
+// also commented 3 lines below which use Purchases
 
 let defaultBreakfast = [{"title":"French Toast\n","description":"Thick slices of bread soaked in a sweet eggy mixture, lightly fried until golden brown, and served with maple syrup.","meal":"breakfast","image":"https://sugarspunrun.com/wp-content/uploads/2023/08/French-Toast-recipe-1-of-1.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121001954477"},{"title":"Blueberry Yogurt Parfait ","description":"Layers of creamy yogurt, crunchy granola, and sweet blueberries create a delightful morning treat bursting with flavor and texture.","meal":"breakfast","image":"https://beamingbaker.com/wp-content/uploads/2022/07/IGT-blueberry-yogurt-parfait-blueberry-parfait-5.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002003429"},{"title":"Bacon and Egg Burrito ","description":"A tantalizing combination of crispy bacon, scrambled eggs, and melted cheese, all wrapped in a warm tortilla. A breakfast favorite.","meal":"breakfast","image":"https://peasandcrayons.com/wp-content/uploads/2020/03/bacon-breakfast-burrito-recipe-.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002010072"},{"title":"Breakfast Burrito ","description":"A hearty and flavorful Mexican-inspired breakfast filled with scrambled eggs, cheese, black beans, and salsa wrapped in a warm tortilla.","meal":"breakfast","image":"https://hips.hearstapps.com/hmg-prod/images/delish-breakfast-burrito-horizontaljpg-1541624805.jpg?crop=0.8889743589743591xw:1xh;center,top&resize=1200:*","ingredients":"","instructions":"","cart":false,"date":"20231121002016212"},{"title":"Breakfast Sandwich ","description":"A hearty combination of fluffy scrambled eggs, crispy bacon, melted cheese, and tangy tomato sauce sandwiched between buttery toasted bread.","meal":"breakfast","image":"https://www.twopeasandtheirpod.com/wp-content/uploads/2023/06/Breakfast-Sandwich-0015.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002023972"},{"title":"Bacon and Cheese Frittata ","description":"A delightful combination of fluffy eggs, crispy bacon, and melty cheese, baked to perfection for a satisfying breakfast.","meal":"breakfast","image":"https://www.allrecipes.com/thmb/suo78_q5T1jGL0ZGXtWd8EeykvA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/222584-bacon-cheese-frittata-4x3-0775-577af3bbcf8047b193c5ee69d366c3ce.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002029584"},{"title":"Cinnamon Roll","description":"Soft and fluffy cinnamon roll drizzled with a sweet glaze, perfect for a cozy and indulgent breakfast treat.","meal":"breakfast","image":"https://www.allrecipes.com/thmb/SXBA_9EaVs0Q5anMwXtGIJ4g6kQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/cinnamon_rolls_editedcinnmon_roll_TT_421-9a9e8182d542469e84d6aa0e75cf9fd3.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002034761"},{"title":"Lox Bagel","description":"A toasty bagel topped with smoked salmon, cream cheese, red onion, capers, and fresh dill for a savory breakfast delight.","meal":"breakfast","image":"https://tastesbetterfromscratch.com/wp-content/uploads/2022/07/Lox-Bagel-1.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121004149882"}]
 let defaultLunch = [{"title":"Salmon Teriyaki","description":"Succulent salmon fillet glazed with a tangy teriyaki sauce, perfectly grilled to achieve a delightful caramelized texture. Served with steamed jasmine rice and fresh stir-fried vegetables.","meal":"lunch","image":"https://natashaskitchen.com/wp-content/uploads/2016/01/Teriyaki-Salmon-Recipe-4.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121001948760"},{"title":"Chicken Shawarma","description":"Succulent marinated chicken grilled to perfection, served with warm pita bread, tangy garlic sauce, and refreshing crisp vegetables.","meal":"lunch","image":"https://feelgoodfoodie.net/wp-content/uploads/2023/09/Chicken-Shawarma-TIMG.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121001954538"},{"title":"Margherita Pizza ","description":"A classic Italian thin-crust pizza topped with tangy tomato sauce, fresh mozzarella cheese, and fragrant basil leaves.","meal":"lunch","image":"https://images.prismic.io/eataly-us/ed3fcec7-7994-426d-a5e4-a24be5a95afd_pizza-recipe-main.jpg?auto=compress,format","ingredients":"","instructions":"","cart":false,"date":"20231121003339290"},{"title":"Beef Stir-Fry","description":"Tender strips of beef tossed with colorful vegetables in a savory soy sauce, served over a bed of fluffy white rice.","meal":"lunch","image":"https://www.wellplated.com/wp-content/uploads/2020/05/Beef-Stir-Fry.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121003344817"},{"title":"Turkey Club Sandwich ","description":"A classic combination of sliced turkey, crispy bacon, lettuce, tomato, and mayo on toasted bread for a satisfying lunch.","meal":"lunch","image":"https://dinnersdishesanddesserts.com/wp-content/uploads/2022/03/Turkey-Club-Sandwich-square-scaled-735x735.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121003350976"},{"title":"Vegetable Pad Thai ","description":"A tantalizing blend of rice noodles, colorful veggies, and a tangy peanut sauce, topped with crushed peanuts for added crunch.","meal":"lunch","image":"https://pinchofyum.com/wp-content/uploads/Vegetarian-Pad-Thai-Recipe.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121003402018"},{"title":"BBQ Pulled Pork Sandwich ","description":"Tender pulled pork smothered in tangy barbecue sauce, served on a toasted brioche bun with a side of crispy coleslaw.","meal":"lunch","image":"https://www.melskitchencafe.com/wp-content/uploads/2010/08/bbq-pork-sandwich4-600x900.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121003408445"},{"title":"Spicy Tofu Tacos ","description":"Crispy corn tortillas filled with flavorful tofu, topped with tangy slaw, avocado, and drizzled with spicy chipotle sauce.","meal":"lunch","image":"https://thetoastedpinenut.com/wp-content/uploads/2019/06/Spicy-Vegetarian-Tofu-Tacos-6.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121003416667"}]
@@ -25,6 +28,7 @@ let dinnerToGenerate = 0
 export default function App() {
 
   const [authenticated, setAuthenticated] = useState(false)
+  const [subscribed, setSubscribed] = useState(false)
   
 
   // Stateful progress monitors stateless queues and sends data to loading screen for real-time analytics.
@@ -42,6 +46,7 @@ export default function App() {
   const DEFAULT_MEAL = 'breakfast'
   const [activeMeal, setActiveMeal] = useState(DEFAULT_MEAL)
   const [preferences, setPreferences] = useState({})
+  const [managementURL, setManagementURL] = useState('')
 
   const [init, setInit] = useState(false)
   // Automatically check to see if we are logged in
@@ -160,12 +165,6 @@ export default function App() {
   const handleAppStateChange = newState => {
     if (newState === 'inactive') {
 
-      // Save the state... no need, saved in DB when swiped.
-
-      // AsyncStorage.setItem('breakfast_list', JSON.stringify(breakfastList))
-      // AsyncStorage.setItem('lunch_list', JSON.stringify(lunchList))
-      // AsyncStorage.setItem('dinner_list', JSON.stringify(dinnerList))
-      
     }
 
   };
@@ -423,16 +422,57 @@ function logIn(token)
 {
   
   axios.post(`${BASE_URL}/user`, {user_id: token})
-  .then((res) => {
+  .then(async (res) => {
     setTokens(res.data.tokens)
     setMeals(res.data.meals)
     setUserId(token)
+    setSubscribed(res.data.subscribed)
+
+    // Allow purchasing subscriptions
+    if (Platform.OS === 'ios')
+    {
+      //await Purchases.configure({apiKey: 'appl_iymEcrjJXGyUyYLMNqGXZYiaKvP', appUserID: token})
+    }
+    else
+    {
+      //await Purchases.configure({apiKey: 'goog_NxhhAZhHJkJSHDfsFAPtYIyEClP', appUserID: token})
+    }
+
     setAuthenticated(true)
   })
   .catch((e) => {
     console.log('Error in logIn app.js: ', e)
     
   })
+}
+
+// Purchase subscription
+const purchase = async () => {
+  try {
+      // Try to make the purchase
+      //await Purchases.purchaseProduct("MealCards");
+
+      // Successfull purchase, grant tokens
+      axios.post(`${BASE_URL}/newSubscriber`, {user_id: userId})
+      .then((response) => {
+        // Update tokens locally
+        setTokens(response.data.tokens)
+        setSubscribed(true)
+
+        // UI feedback here for subscription
+
+      })
+      .catch((e) => {
+        // User was charged, but my server made an error
+        // issue refund / log the error
+        console.log(e)
+      })
+      
+  }
+  catch(e)
+  { // User canceled, no wifi etc
+      alert('Error Purchasing. You were not charged.')
+  }
 }
 
 // Client changes meal from header touch
@@ -507,11 +547,13 @@ function changeMeal(newMeal)
 
     // Now get the ingredients and instructions
     let response = await learnMeal(meal)
+    let new_meal = response.data.meal
+
     // When we recieve the ingredients and instructions store them locally
     // by replacing the item we added previously
     setMeals((prevMeals) => ({
       ...prevMeals,
-      [meal.meal]: prevMeals[meal.meal].map((old_meal) => ((uid == old_meal.date) ? response.data.meal : old_meal)),
+      [meal.meal]: prevMeals[meal.meal].map((old_meal) => ((uid == old_meal.date) ? new_meal : old_meal)),
     }));
   }
 
@@ -544,10 +586,6 @@ function forgetMeal(meal)
 // Add the meal to the shopping cart
 function cartMeal(meal)
 {
-  // DB and locally set cart property to true. Thats it!
-
-  
-
   // Locally change the property
   setMeals((prevMeals) => {
     return {
@@ -718,7 +756,7 @@ async function generateMeal(meal)
   {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Navigation cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+          <Navigation subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
         </GestureHandlerRootView>
     );
   }

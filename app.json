@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "MealGenius",
+    "slug": "mealgenius",
+    "version": "1.0.0",
+    "sdkVersion": "49.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "android": {
+      "package": "com.builtbypeter.mealgenius"
+    },
+    "ios": {
+      "bundleIdentifier": "com.builtbypeter.mealgenius"
+    }
+  }
+}

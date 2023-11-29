@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet, TextInput, TouchableWithoutFeedback, Keyboard, Switch, TouchableOpacity, Alert } from 'react-native';
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from '../PrefTypes'; // Import the pref constants
 import { useNavigation } from '@react-navigation/native';
+import Subscribe from '../Components/Subscribe';
 
 const Preferences = (props) => {
   if (props.prefs) {
@@ -158,6 +159,7 @@ const Preferences = (props) => {
             <Text style = {{textAlign: 'center', fontWeight: 'bold'}}>Tips</Text>
             <Text style = {{textAlign: 'center',fontSize: 11}}>In the List & Cart tabs, long press the left side of an item to delete it.</Text>
             <Text style = {{textAlign: 'center',fontSize: 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
+            <Subscribe purchase = {props.purchase} subscribed={props.subscribed}></Subscribe>
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity

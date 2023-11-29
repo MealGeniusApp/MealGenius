@@ -13,6 +13,11 @@ password: {
     unique: false,
 },
 
+renewal_date: {
+    type: Number,
+    default: 0
+},
+
 pending_device: {
     type: String
 },

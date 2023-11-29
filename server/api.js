@@ -10,6 +10,8 @@ const bcrypt = require("bcrypt");
 const nodemailer = require('nodemailer');
 const MAX_HISTORY_LENGTH = process.env.MAX_HISTORY_LENGTH
 
+const GPT_KEY = process.env.GPT_API_KEY
+const REVENUECAT_API_KEY = process.env.REVENUECAT_API_KEY
 
 // DB connection
 dbConnect()
@@ -47,51 +49,33 @@ async function maintainUsers()
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = futureDate.toLocaleDateString('en-US', options);
 
-  // For each user, check if they have an active subscription.
-  // Active if subscription field is not '', AND passes API verification.
-  // Otherwise, not active.
-
-  // const subscribers = await User.find({ receipt: { $ne: '' } });
-
-  //   // Process each user in the result
-  //   subscribers.forEach((user) => {
-      
-  //     console.log(`Processing user ${user._id}, subscription: ${user.receipt}`);
-      
-  //     // If receipt is invalid, set tokens to 0. If it is valid, AND today is the date of subscription, reset.
-
-  //     const requestData = {
-  //       'receipt-data': user.receipt,
-  //       'password': process.env.APPLE_SECRET
-  //     };
-
-  //     axios.post('https://sandbox.itunes.apple.com/verifyReceipt', requestData)
-  //     .then(response => {
-  //       const latestReceiptInfo = response.data.latest_receipt_info[0];
-
-  //       if (latestReceiptInfo) {
-  //           const expirationDate = new Date(item.expires_date_ms);
-  //           const isSubscriptionActive = item.is_in_intro_offer_period === 'false';
-
-  //           if (isSubscriptionActive) {
-  //             console.log(`Subscription for product ${productId} is active until ${expirationDate}`);
-  //           } else {
-  //             console.log(`Subscription for product ${productId} has expired`);
-  //           }
-            
-  //       } else {
-  //         // Not a valid subscription, set tokens to 0
-  //         console.log('No latest receipt info found');
-  //       }
-  //     })
-  //     .catch(error => {
-  //       console.error('Error validating old receipt:', error);
-  //     });
-
-  //   });
-
 
   try {
+    // Grant tokens if its renewal day
+
+    // Find all users that renew today and check/update entitlements
+    User.find({renewal_date: currentDate.getDate()}, async (err, users) => {
+      if (err) {
+        console.error('Error finding users:', err);
+      } else {
+        // Iterate through each user and update tokens if they have an active entitlement
+        for (const user of users) {
+          let subscribed = await isSubscribed(String(user._id))
+          if (subscribed)
+          {
+            await User.updateOne({ _id: user._id }, { $set: { tokens: process.env.TOKEN_COUNT } });
+          }
+          else
+          {
+            // It looks like they expired today. Remove tokens.
+            // Update: They did pay for month long access.. so dont remove the tokens. 
+            await User.updateOne({ _id: user._id }, { $set: { renewal_date: 0 } });
+          }
+          
+        }
+      }
+    });
+  
     // Increment 'dormant' field by 1 for all users
     await User.updateMany({}, { $inc: { dormant: 1 } });
 
@@ -158,11 +142,96 @@ async function maintainUsers()
 
 
 // Endpoints
-const GPT_KEY = process.env.GPT_API_KEY
+
 
 router.get('/', (req,res) => {
     res.send('Meal Genius')
 })
+
+async function isSubscribed(user_id) {
+  try {
+    const options = {
+      method: 'GET',
+      url: `https://api.revenuecat.com/v1/subscribers/${user_id}`,
+      headers: { accept: 'application/json', Authorization: `Bearer ${REVENUECAT_API_KEY}` },
+    };
+
+    const response = await axios.request(options);
+
+    // The user
+    const subscriber = response.data.subscriber;
+    const entitlements = subscriber.entitlements;
+
+    // Look at the user's entitlements to check for MealCards
+    for (const value of Object.values(entitlements)) {
+      if (value == 'MealCards') {
+        
+        // Check if it is active
+        const expirationTime = new Date(value.expires_date);
+        const currentTime = new Date();
+        return expirationTime > currentTime;
+      }
+    }
+
+    // If no relevant entitlement was found, assume not subscribed
+    return false;
+  } catch (error) {
+    console.error(error);
+    // Handle errors and return false
+    return false;
+  }
+}
+
+
+// A user just subscribed
+// Verify their reciept => grant tokens
+router.post('/newSubscriber', async(req, res) => {
+  let user_id = req.body.user_id
+  // Anyone can call this endpoint
+  // Implement security by checking subscription status
+  const subscribed = await isSubscribed(user_id);
+
+  if (subscribed)
+  {
+    let currentDate = new Date();
+    let dayofmonth = currentDate.getDate()
+    // User is verified! Grant the tokens
+    User.findByIdAndUpdate(
+      req.body.user_id,
+      {
+        $set: { tokens: process.env.TOKEN_COUNT, renewal_date: dayofmonth} // Set tokens
+      }, {new: true}).then((user) => {
+  
+        if (user)
+        {
+          response.status(200).send({
+            message: "Success!",
+            tokens: user.tokens
+          });
+        }
+        else
+        {
+          response.status(404).send({
+            message: "User not found!",
+          });
+        }
+      })
+      .catch((e) => {
+        response.status(500).send({
+          message: "Error finding user",
+        });
+      })
+
+
+  }
+  else
+  {
+    // User is not subscribed return 401 unauthorized.
+    res.status(401).send({status: "Unauthorized"})
+  }
+
+})
+
 
 
 // Clear history
@@ -562,6 +631,8 @@ router.post("/login", (request, response) => {
 
           // if the passwords match
           .then(async (passwordCheck) => {
+
+            
   
             // check if password matches
             if(!passwordCheck) {
@@ -575,9 +646,11 @@ router.post("/login", (request, response) => {
             //Now check if device is permitted
             if (user.devices.includes(request.body.device))
             {
+
                 response.status(200).send({
                     message: "Login Successful",
                     token: user._id,
+                    subscribed: user.renewal_date > 0
                 });
             }
             else 
@@ -706,6 +779,7 @@ router.post('/cartMeal', async (req, res) => {
     let newMeals = meals.map(item => {
       if (item.date === meal.date) {
         return { ...item, cart: !(meal.cart) };
+        
       }
       return item;
     });
@@ -739,6 +813,10 @@ router.post('/learnMeal', async(req,res) => {
     
   }
 
+  // Add the meal immediately to the DB, without instructions
+  user.meals[meal.meal].push(meal);
+  user.save()
+
   // Form a message to ask chatGPT
   let query = `Give me a list of instructions and ingredients for ${meal.title}: ${meal.description}. Your response must be structured in this way: INGREDIENTS: {numbered list of ingredients} INSTRUCTIONS: {numbered list of instructions}. Do not exceed 200 words in your combined response.`
 
@@ -762,14 +840,16 @@ axios.post(
   }
 )
 .then(async response => {
+  // Get the meal from the DB incase they updated the cart value while loading
 
   result = response.data.choices[0].message.content
 
-  meal.ingredients = result.substring(result.toUpperCase().indexOf('IGREDIENTS:')+ 14,  result.toUpperCase().indexOf('INSTRUCTIONS') - 1)
-  meal.instructions = result.substring(result.toUpperCase().indexOf('INSTRUCTIONS:') + 14, result.length)
 
-  // Confirm the learned meal
-  user.meals[meal.meal].push(meal);
+  // Get and update the learned meal again (incase its cart value has been updating while learning)
+  const latestMeal = user.meals[meal.meal].find(item => item.date === meal.date);
+
+  latestMeal.ingredients = result.substring(result.toUpperCase().indexOf('IGREDIENTS:')+ 14,  result.toUpperCase().indexOf('INSTRUCTIONS') - 1)
+  latestMeal.instructions = result.substring(result.toUpperCase().indexOf('INSTRUCTIONS:') + 14, result.length)
 
   // NOTE: I am not charging a token for this
   // Decrease the tokens field by 1
@@ -780,7 +860,7 @@ axios.post(
     await user.save();
     // Successful return 
     res.json({
-      meal: meal
+      meal: latestMeal
      })
 
   } catch (err) {
