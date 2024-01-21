@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.MealGenius.app</string>
+          <string>com.builtbypeter.mealgenius</string>
         </array>
       </dict>
     </array>

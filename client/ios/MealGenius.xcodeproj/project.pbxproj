@@ -321,7 +321,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.MealGenius.app";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.builtbypeter.mealgenius";
 				PRODUCT_NAME = "MealGenius";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -348,7 +348,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.MealGenius.app";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.builtbypeter.mealgenius";
 				PRODUCT_NAME = "MealGenius";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";

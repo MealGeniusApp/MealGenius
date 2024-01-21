@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react'
 import {BASE_URL, APPL_API, GOOG_API} from "@env"
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Import the pref constants
 
-//import {Purchases} from 'react-native-purchases';
+import {Purchases} from 'react-native-purchases';
 // also commented 3 lines below which use Purchases
 
 let defaultBreakfast = [{"title":"French Toast\n","description":"Thick slices of bread soaked in a sweet eggy mixture, lightly fried until golden brown, and served with maple syrup.","meal":"breakfast","image":"https://sugarspunrun.com/wp-content/uploads/2023/08/French-Toast-recipe-1-of-1.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121001954477"},{"title":"Blueberry Yogurt Parfait ","description":"Layers of creamy yogurt, crunchy granola, and sweet blueberries create a delightful morning treat bursting with flavor and texture.","meal":"breakfast","image":"https://beamingbaker.com/wp-content/uploads/2022/07/IGT-blueberry-yogurt-parfait-blueberry-parfait-5.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002003429"},{"title":"Bacon and Egg Burrito ","description":"A tantalizing combination of crispy bacon, scrambled eggs, and melted cheese, all wrapped in a warm tortilla. A breakfast favorite.","meal":"breakfast","image":"https://peasandcrayons.com/wp-content/uploads/2020/03/bacon-breakfast-burrito-recipe-.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002010072"},{"title":"Breakfast Burrito ","description":"A hearty and flavorful Mexican-inspired breakfast filled with scrambled eggs, cheese, black beans, and salsa wrapped in a warm tortilla.","meal":"breakfast","image":"https://hips.hearstapps.com/hmg-prod/images/delish-breakfast-burrito-horizontaljpg-1541624805.jpg?crop=0.8889743589743591xw:1xh;center,top&resize=1200:*","ingredients":"","instructions":"","cart":false,"date":"20231121002016212"},{"title":"Breakfast Sandwich ","description":"A hearty combination of fluffy scrambled eggs, crispy bacon, melted cheese, and tangy tomato sauce sandwiched between buttery toasted bread.","meal":"breakfast","image":"https://www.twopeasandtheirpod.com/wp-content/uploads/2023/06/Breakfast-Sandwich-0015.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002023972"},{"title":"Bacon and Cheese Frittata ","description":"A delightful combination of fluffy eggs, crispy bacon, and melty cheese, baked to perfection for a satisfying breakfast.","meal":"breakfast","image":"https://www.allrecipes.com/thmb/suo78_q5T1jGL0ZGXtWd8EeykvA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/222584-bacon-cheese-frittata-4x3-0775-577af3bbcf8047b193c5ee69d366c3ce.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002029584"},{"title":"Cinnamon Roll","description":"Soft and fluffy cinnamon roll drizzled with a sweet glaze, perfect for a cozy and indulgent breakfast treat.","meal":"breakfast","image":"https://www.allrecipes.com/thmb/SXBA_9EaVs0Q5anMwXtGIJ4g6kQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/cinnamon_rolls_editedcinnmon_roll_TT_421-9a9e8182d542469e84d6aa0e75cf9fd3.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121002034761"},{"title":"Lox Bagel","description":"A toasty bagel topped with smoked salmon, cream cheese, red onion, capers, and fresh dill for a savory breakfast delight.","meal":"breakfast","image":"https://tastesbetterfromscratch.com/wp-content/uploads/2022/07/Lox-Bagel-1.jpg","ingredients":"","instructions":"","cart":false,"date":"20231121004149882"}]
@@ -421,6 +421,7 @@ function loggedIn(token)
 function logIn(token)
 {
   
+  
   axios.post(`${BASE_URL}/user`, {user_id: token})
   .then(async (res) => {
     setTokens(res.data.tokens)
@@ -431,11 +432,11 @@ function logIn(token)
     // Allow purchasing subscriptions
     if (Platform.OS === 'ios')
     {
-      //await Purchases.configure({apiKey: APPL_API, appUserID: token})
+      await Purchases.configure({apiKey: APPL_API, appUserID: token})
     }
     else
     {
-      //await Purchases.configure({apiKey: GOOG_API, appUserID: token})
+      await Purchases.configure({apiKey: GOOG_API, appUserID: token})
     }
 
     setAuthenticated(true)
@@ -450,7 +451,7 @@ function logIn(token)
 const purchase = async () => {
   try {
       // Try to make the purchase
-      //await Purchases.purchaseProduct("MealCards");
+      await Purchases.purchaseProduct("MealCards");
 
       // Successfull purchase, grant tokens
       axios.post(`${BASE_URL}/newSubscriber`, {user_id: userId})

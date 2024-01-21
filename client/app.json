@@ -16,17 +16,32 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.MealGenius.app"
+      "bundleIdentifier": "com.builtbypeter.mealgenius"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.MealGenius.app"
+      "package": "com.builtbypeter.mealgenius"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d9208893-a3df-4619-9084-128ca77b7fd9"
+      }
     }
   }
 }

@@ -92,6 +92,7 @@ export default function LoginScreen(props) {
 
   const onLoginPress = () => {
     setStatus('Attempting login...')
+
     axios.post(`${BASE_URL}/login`, {email: email, password: password, device: deviceId})
     .then((res) =>
     {
@@ -173,7 +174,7 @@ export default function LoginScreen(props) {
         props.login(userId)
         if (res.data.trial)
         {
-          alert("Welcome! You have been granted 50 free swipes!")
+          alert("Welcome! You have been granted 30 free swipes!")
         }
       }
       
