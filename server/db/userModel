@@ -5,6 +5,10 @@ email: {
     type: String,
     required: [true, "Please provide an email."],
     unique: [true, "Username taken!"],
+    index: {
+        unique: true,
+        collation: { locale: 'en', strength: 2 }
+      }
 },
 
 password: {
