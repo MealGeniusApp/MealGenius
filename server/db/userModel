@@ -1,19 +1,20 @@
 const mongoose = require("mongoose");
+const uniqueValidator = require('mongoose-unique-validator');
+
 const UserSchema = new mongoose.Schema({
     
 email: {
     type: String,
     required: [true, "Please provide an email."],
     unique: [true, "Username taken!"],
-    index: {
-        unique: true,
-        collation: { locale: 'en', strength: 2 }
-      }
+    maxlength: [100, "Email too long"],
+    uniqueCaseInsensitive: true
 },
 
 password: {
     type: String,
     required: [true, "Please provide a password!"],
+    maxlength: [20, "Max pwd length is 20"],
     unique: false,
 },
 
@@ -79,5 +80,9 @@ devices: {
 }
 
 })
+
+UserSchema.plugin(uniqueValidator, {
+    message: 'Error, expected {PATH} to be unique.'
+  });
   
 module.exports = mongoose.model.Users || mongoose.model("User", UserSchema);
