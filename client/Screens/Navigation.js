@@ -72,7 +72,7 @@ const Navigation = (props) => {
         children={()=><Cart forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
     
         <Tab.Screen name="Preferences"
-        children={()=><Preferences subscribed = {props.subscribed} purchase = {props.purchase} tokens = {props.tokens} managementURL = {props.managementURL} refreshMeals = {props.refreshMeals} prefs = {props.prefs} setFastMode = {props.setFastMode} savePreferences = {props.savePreferences} clearHistory = {props.clearHistory} logout={props.logout}/>} />
+        children={()=><Preferences subscribed = {props.subscribed} purchase = {props.purchase} tokens = {props.tokens} managementURL = {props.managementURL} refreshMeals = {props.refreshMeals} prefs = {props.prefs} setFastMode = {props.setFastMode} savePreferences = {props.savePreferences} clearHistory = {props.clearHistory} logout={props.logout} deleteAccount= {props.deleteAccount}/>} />
       </Tab.Navigator>
     </NavigationContainer>
   );

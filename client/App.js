@@ -333,6 +333,44 @@ export default function App() {
     setAuthenticated(false)
   }
 
+   // Delete account through preference page
+   function deleteAccount(password)
+   {
+    AsyncStorage.getItem('token')
+    .then((id) => {
+
+      axios.post(`${BASE_URL}/deleteAccount`, {id: id, password: password})
+      .then((res) => {
+        // Deleted account successfully, logout now
+        AsyncStorage.removeItem('token')
+        setAuthenticated(false)
+
+      })
+      .catch((e) => {
+        // could not delete, display error
+        if (e.response.status == 400)
+        {
+          alert("Failed to delete your account. Your password was incorrect.")
+
+        }
+        else if (e.response.status == 404)
+        {
+          alert("Failed to delete your account: User not found")
+
+        }
+        else{
+          alert("Failed to delete your account. Please try again later")
+
+        }
+        
+        console.log("Error deleting account:", e.response.status)
+      })
+     
+
+    })
+    
+   }
+
   // Clear history
   function clearHistory()
   {
@@ -766,7 +804,7 @@ async function generateMeal(meal)
   {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Navigation subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+          <Navigation deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
         </GestureHandlerRootView>
     );
   }
