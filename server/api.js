@@ -8,6 +8,7 @@
   var axios = require('axios')
   const bcrypt = require("bcrypt");
   const nodemailer = require('nodemailer');
+const { default: mongoose } = require('mongoose');
   const MAX_HISTORY_LENGTH = process.env.MAX_HISTORY_LENGTH
 
   const GPT_KEY = process.env.GPT_API_KEY
@@ -802,7 +803,7 @@
     let pwd = req.body.password
     let id = req.body.id
 
-    User.findById({ _id: id })
+    User.findById({_id: id })
       
         // if email exists
         .then((user) => {
@@ -905,33 +906,41 @@
 
     result = response.data.choices[0].message.content
 
+    // Get latest user to fix overwriting data
+    // let user2 = await User.findById(uid)
 
     // Get and update the learned meal again (incase its cart value has been updating while learning)
     const latestMeal = user.meals[meal.meal].find(item => item.date === meal.date);
 
-    
-
     latestMeal.ingredients = result.substring(result.toUpperCase().indexOf('IGREDIENTS:')+ 14,  result.toUpperCase().indexOf('INSTRUCTIONS') - 1)
     latestMeal.instructions = result.substring(result.toUpperCase().indexOf('INSTRUCTIONS:') + 14, result.length)
 
-    // NOTE: I am not charging a token for this
-    // Decrease the tokens field by 1
-    // user.tokens--;
+
+    // Prepare the update query
+    const updateValues = {
+      $set: {
+        ['meals.' + meal.meal + '.$[element].ingredients']: latestMeal.ingredients,
+        ['meals.' + meal.meal + '.$[element].instructions']: latestMeal.instructions,
+      }
+    };
     
-    // Save the updated user 
-    try {
-      user.markModified('meals');
-      await user.save();
-      // Successful return 
+    const options = {
+      arrayFilters: [{ 'element.date': meal.date }],
+      new: true, // Return the modified document
+    };
+
+    // Update the values for this user
+    User.findByIdAndUpdate(uid, updateValues, options)
+    .then((doc) => {
+      // To set the details on the UI
       res.json({
         meal: latestMeal
       })
-
-    } catch (err) {
-      console.error('Error updating user after learning meal', err);
-      res.status(500);
-      res.json({error: "Error updating user after learning meal"})
-    }
+    })
+    .catch((e) => {
+      console.log("Learn meal fail:", e)
+    })
+          
   })
   .catch(error => {
     // gpt error: server issue, not client issue

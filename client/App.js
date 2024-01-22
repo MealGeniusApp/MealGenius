@@ -595,6 +595,7 @@ function changeMeal(newMeal)
 
     // Now get the ingredients and instructions
     let response = await learnMeal(meal)
+    
     let new_meal = response.data.meal
 
     // When we recieve the ingredients and instructions store them locally

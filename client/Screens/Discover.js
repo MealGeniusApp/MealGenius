@@ -6,7 +6,7 @@ import NoTokens from '../Components/NoTokens';
 
 const Discover = (props) => {
     // Only show meals if we have tokens
-    if (props.tokens)
+    if (props.tokens > 0)
     {
       if (!props.loading)
       {

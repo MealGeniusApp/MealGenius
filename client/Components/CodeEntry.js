@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { View, Text, Platform, TouchableOpacity, StyleSheet, Button} from 'react-native';
+import { View, Text, Platform, TouchableOpacity, StyleSheet } from 'react-native';
 import CodeInput from 'react-native-confirmation-code-input';
 
-const CodeEntry = ({ fulfilled, status }) => {
+const CodeEntry = ({ fulfilled, status, back }) => {
+
+  // Return to login
   function handlePress()
   {
     // back button
-    alert('button working')
-    console.log('back button working')
+    back()
   }
 
     return (
@@ -18,12 +19,11 @@ const CodeEntry = ({ fulfilled, status }) => {
         
         <View style={styles.loginScreenContainer}>
 
-            <View style={styles.container}>
-              <TouchableOpacity style={{position:'absolute', flex: 1}} onPress={handlePress}>
-              <Text style={styles.button} onPress={handlePress} >{'<'}</Text>
-              </TouchableOpacity>
+          {/* Back Button */}
+          <TouchableOpacity style = {{margin: Platform.OS === 'ios' && Platform.isPad ? 50 : 25, padding: 15}} onPress={handlePress}>
+            <Text style={styles.button} >{'<'}</Text>
+          </TouchableOpacity>
                 
-            </View>
 
 
             
@@ -65,6 +65,7 @@ const CodeEntry = ({ fulfilled, status }) => {
     },
     loginScreenContainer: {
       flex: 1,
+      width: "100%"
     },
     logoText: {
       fontSize: Platform.OS === 'ios' && Platform.isPad ? 65 : 40,

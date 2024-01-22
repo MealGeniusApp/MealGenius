@@ -184,6 +184,7 @@ const Preferences = (props) => {
                 }}
               />
             </View> */}
+            <Text style = {{marginBottom: "5%", textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>You can click Refresh Meals below to remove outdated meals after changing.</Text>
 
             <Text style={styles.title}>Permitted Complexities</Text>
             <View>
@@ -221,7 +222,7 @@ const Preferences = (props) => {
             <Text style = {{marginTop: 'auto', textAlign: 'center', fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 14}}>Tips</Text>
             <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Swipe left to discard, swipe right to save</Text>
             <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>In the List & Cart tabs, long press the left side of an item to delete it.</Text>
-
+            <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>{`Tap the word "${props.meal}" at the top of the screen to view other meals.`}</Text>
             <Text style = {{marginBottom: Platform.OS === 'ios' && Platform.isPad ? 45 : 9 ,textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
 
             {/* <Subscribe purchase = {props.purchase} subscribed={props.subscribed}></Subscribe> */}

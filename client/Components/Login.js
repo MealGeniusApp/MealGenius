@@ -249,7 +249,7 @@ export default function LoginScreen(props) {
   if (showCode)
   {
     return(
-      <CodeEntry fulfilled = {onFulfill} status = {status} ></CodeEntry>
+      <CodeEntry back = {()=> {setShowCode(false); setStatus("")}} fulfilled = {onFulfill} status = {status} ></CodeEntry>
     )
   }
 
