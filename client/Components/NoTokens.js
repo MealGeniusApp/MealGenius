@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 
 const NoTokens = (props) => {
   return (
@@ -36,14 +36,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 2 },
-    height: 620
+    height: Platform.OS === 'ios' && Platform.isPad ? 1150 : 620,
   },
   title: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 40 : 18,
     fontWeight: 'bold',
   },
   description: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 28 : 16,
     marginTop: 30,
     marginBottom: 20,
     
@@ -52,8 +52,8 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   image: {
-    width: 200,
-    height: 200,
+    width: Platform.OS === 'ios' && Platform.isPad ? 350 : 200,
+    height: Platform.OS === 'ios' && Platform.isPad ? 350 : 200,
     resizeMode: 'cover', 
   },
   

@@ -9,6 +9,7 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   Vibration,
+  Platform
 } from 'react-native';
 import ListCard from '../Components/ListCard';
 
@@ -171,12 +172,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   title: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 40 : 18,
     textAlign: 'center',
   },
   image: {
-    height: 150,
-    width: 150,
+    height: Platform.OS === 'ios' && Platform.isPad ? 240 : 150,
+    width: Platform.OS === 'ios' && Platform.isPad ? 240 : 150,
     borderRadius: 8,
     margin: 20,
     alignSelf: 'center'
@@ -197,9 +198,10 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontWeight: 'bold',
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 14,
   },
   contentText: {
-    fontSize: 17
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 17 : 17,
   },
   closeButton: {
     alignSelf: 'center',
@@ -220,15 +222,15 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tokenText: {
-    fontSize: 17,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 30 : 17,
   },
   loadtext: {
-    fontSize: 17,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 30 : 17,
     textAlign: 'center'
   },
   loadimage: {
-    width:100,
-    height:100,
+    width: Platform.OS === 'ios' && Platform.isPad ? 100 : 120,
+    height: Platform.OS === 'ios' && Platform.isPad ? 100 : 120,
     alignSelf: 'center'
   },
 });

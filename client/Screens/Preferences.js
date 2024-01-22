@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, TextInput, TouchableWithoutFeedback, Keyboard, Switch, TouchableOpacity, Alert } from 'react-native';
+import { Platform, View, Text, Button, StyleSheet, TextInput, TouchableWithoutFeedback, Keyboard, Switch, TouchableOpacity, Alert } from 'react-native';
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from '../PrefTypes'; // Import the pref constants
 import { useNavigation } from '@react-navigation/native';
 import Subscribe from '../Components/Subscribe';
@@ -99,12 +99,13 @@ const Preferences = (props) => {
             <Text style={styles.title}>Special Requests</Text>
             <TextInput
               style={{
-                height: 190,
+                height: Platform.OS === 'ios' && Platform.isPad ? 300 : 190,
                 borderRadius: 10,
                 borderWidth: 1,
                 borderColor: 'gray',
                 padding: 10,
                 margin: 5,
+                fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 14
               }}
               multiline={true}
               numberOfLines={10}
@@ -126,7 +127,7 @@ const Preferences = (props) => {
             <Text style={styles.title}>Permitted Complexities</Text>
             <View>
               <View style={styles.switch}>
-                <Text style={{ fontSize: 16 }}>Simple</Text>
+                <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16  }}>Simple</Text>
                 <Switch
                   value={simpleMeal}
                   onValueChange={() => {
@@ -136,7 +137,7 @@ const Preferences = (props) => {
                 />
               </View>
               <View style={styles.switch}>
-                <Text style={{ fontSize: 16 }}>Average</Text>
+                <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16  }}>Average</Text>
                 <Switch
                   value={averageMeal}
                   onValueChange={() => {
@@ -146,7 +147,7 @@ const Preferences = (props) => {
                 />
               </View>
               <View style={styles.switch}>
-                <Text style={{ fontSize: 16 }}>Complex</Text>
+                <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16 }}>Complex</Text>
                 <Switch
                   value={complexMeal}
                   onValueChange={() => {
@@ -156,10 +157,12 @@ const Preferences = (props) => {
                 />
               </View>
             </View>
-            <Text style = {{textAlign: 'center', fontWeight: 'bold'}}>Tips</Text>
-            <Text style = {{textAlign: 'center',fontSize: 11}}>In the List & Cart tabs, long press the left side of an item to delete it.</Text>
-            <Text style = {{textAlign: 'center',fontSize: 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
-            <Subscribe purchase = {props.purchase} subscribed={props.subscribed}></Subscribe>
+            <Text style = {{marginTop: 'auto', textAlign: 'center', fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 14}}>Tips</Text>
+            <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>In the List & Cart tabs, long press the left side of an item to delete it.</Text>
+            <Text style = {{marginBottom: Platform.OS === 'ios' && Platform.isPad ? 45 : 9 ,textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
+
+            {/* <Subscribe purchase = {props.purchase} subscribed={props.subscribed}></Subscribe> */}
+
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -205,10 +208,10 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'red',
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 30 : 16,
   },
   title: {
-    fontSize: 15,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 22 : 15,
     alignSelf: 'center',
     fontWeight: 'bold',
     margin: 5,
@@ -225,6 +228,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: Platform.OS === 'ios' && Platform.isPad ? 30 : 10
   },
 });
 

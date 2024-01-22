@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
 const ListCard = ({ meal, onPress, onLongPress }) => {
   return (
@@ -42,11 +42,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 2 },
-    height: 120,
+    height: Platform.OS === 'ios' && Platform.isPad ? 200 : 120,
   },
   image: {
-    width: 70,
-    height: 70,
+    width: Platform.OS === 'ios' && Platform.isPad ? 120 : 70,
+    height: Platform.OS === 'ios' && Platform.isPad ? 120 : 70,
     marginRight: 16,
     borderRadius: 15,
   },
@@ -56,17 +56,18 @@ const styles = StyleSheet.create({
   },
   cartImage: {
     position: 'absolute',
-    top: 0,
+    top: Platform.OS === 'ios' && Platform.isPad ? -15 : 0,
     right: 0,
-    width: 30, // Adjust the width and height as needed
-    height: 30,
+    width: Platform.OS === 'ios' && Platform.isPad ? 60 : 30,
+    height: Platform.OS === 'ios' && Platform.isPad ? 60 : 30,
     borderRadius: 15,
   },
   title: {
-    fontSize: 15,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 30 : 15,
     fontWeight: 'bold',
   },
   description: {
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 23 : 14,
     marginTop: 8,
   },
 });

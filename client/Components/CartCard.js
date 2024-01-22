@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Platform, View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
 const CartCard = ({ meal, onPress, onLongPress }) => {
 
@@ -28,7 +28,7 @@ const CartCard = ({ meal, onPress, onLongPress }) => {
     <TouchableOpacity
       onPress={() => {onPress(meal); setSelected(!selected)}}
       onLongPress={(event) => onLongPress(event, meal)}
-      style={{ ...styles.card, height: selected? 'auto': 120 }}
+      style={{ ...styles.card, height: selected? 'auto': Platform.OS === 'ios' && Platform.isPad ? 200 : 120 }}
     >
       {/* Add image on the left */}
       {!selected && (<Image source={{ uri: meal.image }} style={styles.image} />)}
@@ -50,7 +50,7 @@ const CartCard = ({ meal, onPress, onLongPress }) => {
 
             !selected? (
             <View>
-              <Text>Touch to view ingredients</Text>
+              <Text style = {{fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 14,}}>Touch to view ingredients</Text>
             </View>)
             :
 
@@ -90,12 +90,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 2 },
+    height: Platform.OS === 'ios' && Platform.isPad ? 200 : 120,
   },
   image: {
-    width: 70,
-    height: 70,
+    width: Platform.OS === 'ios' && Platform.isPad ? 120 : 70,
+    height: Platform.OS === 'ios' && Platform.isPad ? 120 : 70,
     marginRight: 16,
     borderRadius: 15,
+    
   },
   textContainer: {
     flex: 1,
@@ -103,18 +105,18 @@ const styles = StyleSheet.create({
   },
   cartImage: {
     position: 'absolute',
-    top: 0,
+    top: Platform.OS === 'ios' && Platform.isPad ? -15 : 0,
     right: 0,
-    width: 30, // Adjust the width and height as needed
-    height: 30,
+    width: Platform.OS === 'ios' && Platform.isPad ? 60 : 30,
+    height: Platform.OS === 'ios' && Platform.isPad ? 60 : 30,
     borderRadius: 15,
   },
   title: {
-    fontSize: 15,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 30 : 15,
     fontWeight: 'bold',
-    marginBottom: 15
   },
   description: {
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 23 : 14,
     marginTop: 8,
   },
   tokenContainer: {
@@ -124,15 +126,15 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tokenText: {
-    fontSize: 17,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 30 : 17,
   },
   loadtext: {
-    fontSize: 17,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 30 : 17,
     textAlign: 'center'
   },
   loadimage: {
-    width:100,
-    height:100,
+    width: Platform.OS === 'ios' && Platform.isPad ? 150 : 100,
+    height: Platform.OS === 'ios' && Platform.isPad ? 150 : 100,
     alignSelf: 'center'
   },
 });

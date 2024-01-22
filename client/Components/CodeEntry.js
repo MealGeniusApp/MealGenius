@@ -67,14 +67,14 @@ const CodeEntry = ({ fulfilled, status }) => {
       flex: 1,
     },
     logoText: {
-      fontSize: 40,
+      fontSize: Platform.OS === 'ios' && Platform.isPad ? 65 : 40,
       fontWeight: "100",
       marginTop: 150,
       marginBottom: 30,
       textAlign: "center",
     },
     errorText: {
-      fontSize: 18,
+      fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 18,
       fontWeight: "200",
       marginTop: 20,
       marginBottom: 30,
@@ -85,8 +85,8 @@ const CodeEntry = ({ fulfilled, status }) => {
       flex: 1,
     },
     loginFormTextInput: {
-      height: 43,
-      fontSize: 14,
+      height: Platform.OS === 'ios' && Platform.isPad ? 76: 43,
+      fontSize: Platform.OS === 'ios' && Platform.isPad ? 24 : 14,
       borderRadius: 5,
       borderWidth: 1,
       borderColor: "#eaeaea",
@@ -98,7 +98,7 @@ const CodeEntry = ({ fulfilled, status }) => {
     loginButton: {
       backgroundColor: "#3897f1",
       borderRadius: 5,
-      height: 45,
+      height: Platform.OS === 'ios' && Platform.isPad ? 65 : 45,
       marginTop: 10,
       width: 350,
       alignItems: "center"
@@ -108,7 +108,7 @@ const CodeEntry = ({ fulfilled, status }) => {
       marginBottom:-50,
     },
     button: {
-      fontSize: 24,
+      fontSize: Platform.OS === 'ios' && Platform.isPad ? 38 : 24,
     },
   });
 

@@ -1,5 +1,5 @@
 import React, { useState} from 'react';
-import { View, Image, Text, StyleSheet, Animated } from 'react-native';
+import { View, Image, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const SwipeableCard = ({ nextMeal, swipe}) => {
@@ -132,23 +132,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 2 },
-    height: 620
+    height: Platform.OS === 'ios' && Platform.isPad ? 1150 : 620
   },
   title: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 40 : 18,
     fontWeight: 'bold',
     paddingBottom: 16
   },
   description: {
     marginTop: 8,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 30 : 15,
+    padding: Platform.OS === 'ios' && Platform.isPad ? 40 : 15,
   },
   imagecontainer: {
     alignItems: 'center',
     paddingBottom: 16
   },
   image: {
-    width: 200,
-    height: 200,
+    width: Platform.OS === 'ios' && Platform.isPad ? 300 : 200,
+    height: Platform.OS === 'ios' && Platform.isPad ? 300 : 200,
     borderWidth: 1,     
     borderColor: 'gray', 
     borderRadius: 5,      

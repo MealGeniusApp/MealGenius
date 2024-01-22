@@ -1,6 +1,6 @@
 // Card.js
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import * as Progress from 'react-native-progress'
 
 const LoadingCard = (props) => {
@@ -17,7 +17,7 @@ const LoadingCard = (props) => {
         
       <Text style={styles.description}>Generating meals...</Text>
 
-      <Progress.Bar progress={props.progress} width={200} />
+      <Progress.Bar progress={props.progress} width={Platform.OS === 'ios' && Platform.isPad ? 400 : 200} />
 
       <View style = {styles.bottomTextContainer}>
         <Text style={styles.bottomText}>This should only take a minute.</Text>
@@ -40,14 +40,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 2 },
-    height: 620
+    height: Platform.OS === 'ios' && Platform.isPad ? 1150 : 620,
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
   },
   description: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 16,
     marginTop: 30,
     marginBottom: 20,
     
@@ -56,8 +56,8 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   image: {
-    width: 200,
-    height: 200,
+    width: Platform.OS === 'ios' && Platform.isPad ? 350 : 200,
+    height: Platform.OS === 'ios' && Platform.isPad ? 350 : 200,
     resizeMode: 'cover', 
   },
   bottomTextContainer: {
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     marginBottom: 50
   },
   bottomText: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16,
   },
 });
 

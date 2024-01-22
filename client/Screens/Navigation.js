@@ -1,7 +1,6 @@
 // Navigation.js
 import React from 'react';
-import { useState } from 'react';
-import {Text, TouchableOpacity } from 'react-native';
+import {Text, TouchableOpacity, Platform } from 'react-native';
 import { NavigationContainer} from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Cart from './Cart.js'
@@ -29,7 +28,7 @@ const Navigation = (props) => {
   
     return (
       <TouchableOpacity onPress={handleTitlePress}>
-        <Text style = {{fontWeight: 'bold', fontSize: 17}}>{ `${type} ${capitalizeFirstLetter(props.mealTitle)}`}</Text>
+        <Text style = {{fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 17}}>{ `${type} ${capitalizeFirstLetter(props.mealTitle)}`}</Text>
       </TouchableOpacity>
     );
   };
@@ -46,11 +45,11 @@ const Navigation = (props) => {
           if (route.name === 'Cart') {
             iconName = focused ? 'cart' : 'cart-outline';
           } else if (route.name === 'List') {
-            iconName = focused ? 'ios-list' : 'ios-list-outline';
+            iconName = focused ? 'list' : 'list-outline';
           } else if (route.name === 'Discover') {
             iconName = focused ? 'pizza' : 'pizza-outline';
           } else if (route.name === 'Preferences') {
-            iconName = focused ? 'ios-settings' : 'ios-settings-outline';
+            iconName = focused ? 'settings' : 'settings-outline';
           }
     
           return <Icon name={iconName} size={size} color={color} />;

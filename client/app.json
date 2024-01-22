@@ -2,7 +2,7 @@
   "expo": {
     "name": "MealGenius",
     "slug": "MealGenius",
-    "version": "1.0.0",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,19 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.builtbypeter.mealgenius"
+      "bundleIdentifier": "com.builtbypeter.mealgenius",
+        "infoPlist": {
+          "NSAppTransportSecurity": {
+            "NSAllowsArbitraryLoads": true,
+            
+            "NSExceptionDomains": {
+              "54.204.246.135": {
+                "NSExceptionAllowsInsecureHTTPLoads": true
+              }
+            }
+          
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {

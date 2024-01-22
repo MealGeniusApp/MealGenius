@@ -1,5 +1,5 @@
 import React, {useState, useEffect } from "react";
-import {BASE_URL} from "@env"
+
 import axios from "axios";
 import CodeEntry from "./CodeEntry";
 
@@ -11,8 +11,10 @@ import {
   TouchableWithoutFeedback,
   View,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { Button} from "react-native-elements";
+const BASE_URL = "http://54.204.246.135:3001"
 
 let Constants;
 let deviceInfoModule;
@@ -355,11 +357,15 @@ export default function LoginScreen(props) {
               placeholder="Email"
               placeholderColor="#c4c3cb"
               style={styles.loginFormTextInput}
+              autoCapitalize="none"
+              autoCorrect= {false}
               onChangeText={(text) => {setEmail(text); setStatus('')}}
             />
             <TextInput
               placeholder="Password"
               placeholderColor="#c4c3cb"
+              autoCapitalize="none"
+              autoCorrect= {false}
               style={styles.loginFormTextInput}
               secureTextEntry={true}
               onChangeText={(text) => {setPassword(text); setStatus('')}}
@@ -405,14 +411,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logoText: {
-    fontSize: 40,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 60 : 40,
     fontWeight: "100",
-    marginTop: 150,
+    marginTop: Platform.OS === 'ios' && Platform.isPad ? 250 : 150 ,
     marginBottom: 30,
     textAlign: "center",
   },
   errorText: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 24 : 18 ,
     fontWeight: "200",
     marginTop: 20,
     marginBottom: 30,
@@ -424,7 +430,7 @@ const styles = StyleSheet.create({
   },
   loginFormTextInput: {
     height: 43,
-    fontSize: 14,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 23 : 14,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "#eaeaea",
@@ -436,9 +442,9 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: "#3897f1",
     borderRadius: 5,
-    height: 45,
+    height: Platform.OS === 'ios' && Platform.isPad ? 50 : 45 ,
     marginTop: 10,
-    width: 350,
+    width: Platform.OS === 'ios' && Platform.isPad ? 450 : 350,
     alignItems: "center"
   },
   container: {
@@ -446,7 +452,7 @@ const styles = StyleSheet.create({
     marginBottom:-50,
   },
   button: {
-    fontSize: 24,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 40 : 24 ,
   },
   bottomTextContainer: {
     flex: 1, 
@@ -455,6 +461,6 @@ const styles = StyleSheet.create({
     marginBottom: 50
   },
   bottomText: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16 ,
   },
 });
