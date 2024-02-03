@@ -154,7 +154,7 @@ export default function LoginScreen(props) {
   const onFulfill = (code) => {
     // check with server
     axios.post(`${BASE_URL}/confirmDevice`, {email: email, code: code})
-    .then((res) =>
+    .then(async (res) =>
     {
       // Code correct for forgot password
       if (forgotPassword)
@@ -174,6 +174,7 @@ export default function LoginScreen(props) {
         // Login confirmation successful
         setStatus('Logging in...')
         props.login(userId)
+        
         if (res.data.trial)
         {
           alert("Welcome! You have been granted 30 free swipes!")
@@ -182,6 +183,7 @@ export default function LoginScreen(props) {
       
     })
     .catch((e) => {
+      
       if (e.response.status === 401)
       {
         setStatus('Incorrect code, please try again.')
@@ -207,6 +209,7 @@ export default function LoginScreen(props) {
 
       // If code is exhasuted, return to login
     })
+    
   };
   
   // Reset password

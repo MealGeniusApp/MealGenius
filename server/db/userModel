@@ -14,9 +14,9 @@ email: {
 password: {
     type: String,
     required: [true, "Please provide a password!"],
-    maxlength: [20, "Max pwd length is 20"],
     unique: false,
 },
+
 
 renewal_date: {
     type: Number,

@@ -9,9 +9,10 @@ import { useState, useEffect } from 'react'
 
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Import the pref constants
 
-import { Purchases } from 'react-native-purchases';
+import Purchases from 'react-native-purchases';
 
-const BASE_URL = "http://54.204.246.135:3001"
+
+const BASE_URL = "http://11.42.12.174:6971"
 const APPL_API = "appl_iymEcrjJXGyUyYLMNqGXZYiaKvP"
 const GOOG_API = "goog_NxhhAZhHJkJSHDfsFAPtYIyEClP"
 
@@ -166,9 +167,12 @@ export default function App() {
 
 
   const handleAppStateChange = newState => {
-    if (newState === 'inactive') {
-
+    if (newState === 'active') {
+      // App opened. User is not dormat.
+      if (userId)
+        axios.post(`${BASE_URL}/appOpened`, {user_id: userId})
     }
+    
 
   };
 
@@ -177,6 +181,7 @@ export default function App() {
   useEffect(() => {
     // Subscribe to AppState changes
     const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+    //console.log("Opened")
 
     // Clean up subscription when component unmounts
     return () => {
@@ -485,8 +490,9 @@ function logIn(token)
       console.log("RevenueCat failed to initialize")
     }
     
-
+    
     setAuthenticated(true)
+    
   })
   .catch((e) => {
     console.log('Error in logIn app.js: ', e)
@@ -498,23 +504,41 @@ function logIn(token)
 const purchase = async () => {
   try {
       // Try to make the purchase
-      await Purchases.purchaseProduct("MealCards");
+      //Purchases.getOfferings()
+      products = await Purchases.getProducts(['cards']);
+      product = products[0]
+      //console.log(product)
+      try {
+        const {customerInfo, productIdentifier} = await Purchases.purchaseStoreProduct(product);
+        if (typeof customerInfo.entitlements.active['pro'] !== "undefined") {
+          // Successfull purchase, grant tokens
+          axios.post(`${BASE_URL}/newSubscriber`, {user_id: userId})
+          .then((response) => {
+            // Update tokens locally
+            setTokens(response.data.tokens)
+            setSubscribed(true)
+            console.log("Subscribed!")
 
-      // Successfull purchase, grant tokens
-      axios.post(`${BASE_URL}/newSubscriber`, {user_id: userId})
-      .then((response) => {
-        // Update tokens locally
-        setTokens(response.data.tokens)
-        setSubscribed(true)
+            // UI feedback here for subscription
 
-        // UI feedback here for subscription
+          })
+          .catch((e) => {
+            // User was charged, but my server made an error
+            // issue refund / log the error
+            console.log(e)
+          })
+        }
+        else
+        {
+          //console.log("LOCKED")
+        }
+      } catch (e) {
+        if (!e.userCancelled) {
+          console.log(e)
+        }
+      }
 
-      })
-      .catch((e) => {
-        // User was charged, but my server made an error
-        // issue refund / log the error
-        console.log(e)
-      })
+      
       
   }
   catch(e)
@@ -796,8 +820,9 @@ async function generateMeal(meal)
 
   })
   .catch(error => {
-    console.log(`Error in MealGenius api @ generateMeal: `, error)
-    generateMeal(meal)
+    console.log(`Error in MealGeniuds api @ generateMeal: `, error)
+
+    //generateMeal(meal)
   })
 
 }

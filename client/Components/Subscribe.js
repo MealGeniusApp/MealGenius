@@ -13,7 +13,6 @@ const Subscribe = ({ subscribed, purchase }) => {
       {subscribed ? (
         <>
           <Text style={styles.activeText}>Subscription Active</Text>
-          <Image source='https://image.similarpng.com/very-thumbnail/2021/05/Blue-check-mark-icon-design-on-transparent-background-PNG.png' style={styles.checkmarkImage} />
         </>
       ) : (
         <>

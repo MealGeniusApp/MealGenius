@@ -225,7 +225,7 @@ const Preferences = (props) => {
             <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>{`Tap the word "${props.meal}" at the top of the screen to view other meals.`}</Text>
             <Text style = {{marginBottom: Platform.OS === 'ios' && Platform.isPad ? 45 : 9 ,textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
 
-            {/* <Subscribe purchase = {props.purchase} subscribed={props.subscribed}></Subscribe> */}
+            <Subscribe purchase = {props.purchase} subscribed={props.subscribed}></Subscribe>
 
           </View>
           <View style={styles.buttonContainer}>

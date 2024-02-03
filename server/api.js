@@ -17,9 +17,6 @@ const { default: mongoose } = require('mongoose');
   // DB connection
   dbConnect()
 
-  // Maitenance
-  const job = cron.schedule('0 0 * * *', maintainUsers);
-  job.start()
 
 
 
@@ -38,9 +35,31 @@ const { default: mongoose } = require('mongoose');
   // Daily Maitenance
   // * Send warning emails
   // * Delete inactive accounts (if they arent subscribed!)
+
+  // Maitenance
+  const job = cron.schedule('0 0 * * *', maintainUsers);
+  //const job = cron.schedule('*/30 * * * * *', maintainUsers);
+  job.start()
+
   async function maintainUsers()
   {
     const currentDate = new Date();
+
+    // Email me a confirmation that the server is running
+    const mailOptions = {
+      from: process.env.MAILER_USER,
+      to: process.env.ADMIN_EMAIL,
+      subject: `Successful MealGenius Maitenance`,
+      text: `Hi Peter, just a confirmation that maitenance has ran for all MealGenius users successfully.`,
+    };
+  
+    // Send the email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log('Error sending warning email:', error);
+      } else {
+      }
+    });
 
     // Calculate the date 10 days from now
     const futureDate = new Date(currentDate);
@@ -55,27 +74,25 @@ const { default: mongoose } = require('mongoose');
       // Grant tokens if its renewal day
 
       // Find all users that renew today and check/update entitlements
-      User.find({renewal_date: currentDate.getDate()}, async (err, users) => {
-        if (err) {
-          console.error('Error finding users:', err);
-        } else {
-          // Iterate through each user and update tokens if they have an active entitlement
-          for (const user of users) {
-            let subscribed = await isSubscribed(String(user._id))
-            if (subscribed)
-            {
-              await User.updateOne({ _id: user._id }, { $set: { tokens: process.env.TOKEN_COUNT } });
-            }
-            else
-            {
-              // It looks like they expired today. Remove tokens.
-              // Update: They did pay for month long access.. so dont remove the tokens. 
-              await User.updateOne({ _id: user._id }, { $set: { renewal_date: 0 } });
-            }
-            
-          }
+      let users = await User.find({renewal_date: currentDate.getDate()})
+        
+      // Iterate through each user and update tokens if they have an active entitlement
+      for (const user of users) {
+        let subscribed = await isSubscribed(user._id)
+        if (subscribed)
+        {
+          await User.updateOne({ _id: user._id }, { $set: { tokens: process.env.TOKEN_COUNT } });
         }
-      });
+        else
+        {
+          // It looks like they expired today. Remove tokens.
+          // Update: They did pay for month long access.. so dont remove the tokens. 
+          await User.updateOne({ _id: user._id }, { $set: { renewal_date: 0 } });
+          // Be sure to stop renewing them.
+        }
+        
+      }
+
     
       // Increment 'dormant' field by 1 for all users
       await User.updateMany({}, { $inc: { dormant: 1 } });
@@ -86,31 +103,35 @@ const { default: mongoose } = require('mongoose');
       // Email a warning to all inactive users
       const dormantUsers = await User.find({
         $and: [
-          { dormant: { $gte: 180 } },
-          { subscribed: false }
+          { dormant: { $gte: 90 } }
         ]
       });
 
-      // Send each email
+      // Send each email to dormant users who are not subscribed
       dormantUsers.forEach((user) => {
         
-        const mailOptions = {
-          from: process.env.MAILER_USER,
-          to: user.email,
-          subject: `MealGenius account scheduled for deletion`,
-          text: `Your MealGenius account hasn't been accessed in ${user.dormant} days, 
-          and data is scheduled to be purged from our system in 10 days on ${formattedDate}. 
-          To keep your data, simply log in to your account. We hope to see you soon!`,
-        };
-      
-        // Send the email
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.log('Error sending warning email:', error);
-          } else {
-          }
-        });
+        if (!isSubscribed(user._id))
+        {
+          const mailOptions = {
+            from: process.env.MAILER_USER,
+            to: user.email,
+            subject: `MealGenius account scheduled for deletion`,
+            text: `Your MealGenius account hasn't been accessed in ${user.dormant} days, 
+            and data is scheduled to be purged from our system in 10 days on ${formattedDate}. 
+            To keep your data, simply log in to your account. We hope to see you soon!`,
+          };
+        
+          // Send the email
+          transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.log('Error sending warning email:', error);
+            } else {
+            }
+          });
+  
 
+        }
+        
       });
 
 
@@ -120,10 +141,14 @@ const { default: mongoose } = require('mongoose');
         const unconfirmedUsers = await User.find({ email_confirmed: false });
     
         // For all unconfirmed users prepare to mark for deletion
-        const updatePromises = unconfirmedUsers.map((user) => {
+        // If they are not subscribed
+        const updatePromises = unconfirmedUsers
+        .filter(user => !isSubscribed(user._id))
+        .map((user) => {
           user.marked_for_deletion = true;
           return user.save();
         });
+
     
         // Execute all the update operations
         await Promise.all(updatePromises);
@@ -163,9 +188,9 @@ const { default: mongoose } = require('mongoose');
       const subscriber = response.data.subscriber;
       const entitlements = subscriber.entitlements;
 
-      // Look at the user's entitlements to check for MealCards
+      // Look at the user's entitlements to check for cards
       for (const value of Object.values(entitlements)) {
-        if (value == 'MealCards') {
+        if (value['product_identifier'] == 'cards') {
           
           // Check if it is active
           const expirationTime = new Date(value.expires_date);
@@ -200,26 +225,27 @@ const { default: mongoose } = require('mongoose');
       User.findByIdAndUpdate(
         req.body.user_id,
         {
+          // Sets the tokens to TOKEN_COUNT and stores the date on which to renew.
           $set: { tokens: process.env.TOKEN_COUNT, renewal_date: dayofmonth} // Set tokens
         }, {new: true}).then((user) => {
     
           if (user)
           {
-            response.status(200).send({
+            res.status(200).send({
               message: "Success!",
               tokens: user.tokens
             });
           }
           else
           {
-            response.status(404).send({
+            res.status(404).send({
               message: "User not found!",
             });
           }
         })
         .catch((e) => {
-          response.status(500).send({
-            message: "Error finding user",
+          res.status(500).send({
+            message: e,
           });
         })
 
@@ -253,6 +279,18 @@ const { default: mongoose } = require('mongoose');
       res.status(500).send(err);
     }
   })
+  
+  // Mark user as active when app is opened
+  router.post('/appOpened', (req, res) => {
+    User.findByIdAndUpdate(
+      
+      req.body.user_id,
+      {
+        $set: { dormant: 0 }
+      }, {new: true}).then((user) => {
+        console.log(user.email, "opened the app")
+      })
+  })
 
   // Load the user when they log in
   // Must mark them as active, load token count, load meals etc
@@ -261,15 +299,17 @@ const { default: mongoose } = require('mongoose');
     User.findByIdAndUpdate(
       req.body.user_id,
       {
-        $set: { dormant: 0 } // Set dormant days to 0
-      }, {new: true}).then((user) => {
+        // $set: { dormant: 0 } // Set dormant days to 0: Handled now by /appOpened endpoint
+      }, {new: true}).then(async (user) => {
+        
 
         if (user)
         {
           response.status(200).send({
             message: "Success!",
             meals: user.meals,
-            tokens: user.tokens
+            tokens: user.tokens,
+            subscribed: await isSubscribed(req.body.user_id)
           });
         }
         else
@@ -280,6 +320,7 @@ const { default: mongoose } = require('mongoose');
         }
       })
       .catch((e) => {
+        
         response.status(500).send({
           message: "Error finding user",
         });
@@ -651,7 +692,6 @@ const { default: mongoose } = require('mongoose');
                   response.status(200).send({
                       message: "Login Successful",
                       token: user._id,
-                      subscribed: user.renewal_date > 0
                   });
               }
               else 

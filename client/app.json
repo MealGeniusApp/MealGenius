@@ -2,7 +2,7 @@
   "expo": {
     "name": "MealGenius",
     "slug": "MealGenius",
-    "version": "1.0.7",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -23,6 +23,9 @@
             
             "NSExceptionDomains": {
               "54.204.246.135": {
+                "NSExceptionAllowsInsecureHTTPLoads": true
+              },
+              "0.0.0.0": {
                 "NSExceptionAllowsInsecureHTTPLoads": true
               }
             }
