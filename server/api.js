@@ -291,7 +291,24 @@ const { default: mongoose } = require('mongoose');
         console.log(user.email, "opened the app")
       })
   })
-
+  
+  // Update special requests
+  router.post('/updateRequests', (req,res) => {
+    User.findByIdAndUpdate(
+      
+      req.body.user_id,
+      {
+        $set: { requests: req.body.requests }
+      }, {new: true}).then((user) => {
+        console.log(user.email, "updated preferences")
+        res.send('Success')
+      })
+      .catch((e) => {
+        console.log(e)
+        res.status(500).send(e)
+      })
+    
+  })
   // Load the user when they log in
   // Must mark them as active, load token count, load meals etc
   router.post('/user', (req, response) => {
@@ -299,7 +316,7 @@ const { default: mongoose } = require('mongoose');
     User.findByIdAndUpdate(
       req.body.user_id,
       {
-        // $set: { dormant: 0 } // Set dormant days to 0: Handled now by /appOpened endpoint
+        $set: { dormant: 0 } // Set dormant days to 0: Handled now by /appOpened endpoint
       }, {new: true}).then(async (user) => {
         
 
@@ -308,6 +325,7 @@ const { default: mongoose } = require('mongoose');
           response.status(200).send({
             message: "Success!",
             meals: user.meals,
+            requests: user.requests,
             tokens: user.tokens,
             subscribed: await isSubscribed(req.body.user_id)
           });

@@ -12,7 +12,8 @@ import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Impor
 import Purchases from 'react-native-purchases';
 
 
-const BASE_URL = "http://11.42.12.174:6971"
+//const BASE_URL = "http://11.42.12.174:6971"
+const BASE_URL = "http://54.204.246.135:3001"
 const APPL_API = "appl_iymEcrjJXGyUyYLMNqGXZYiaKvP"
 const GOOG_API = "goog_NxhhAZhHJkJSHDfsFAPtYIyEClP"
 
@@ -44,6 +45,7 @@ export default function App() {
   const [tokens, setTokens] = useState(0)
   const [userId, setUserId] = useState()
   const [meals, setMeals] = useState()
+  const [requests, setRequests] = useState('')
 
   const [nextMeal, setNextMeal] = useState('')
 
@@ -190,23 +192,23 @@ export default function App() {
   }, []);
 
   // Force regeneration of all meals
-  function refreshMeals()
+  function refreshMeals(req_in)
   {
     setLoading(true)
     AsyncStorage.removeItem('breakfast_queue')
     breakfastQueue = []
     setBreakfastLoaded(false)
-    scheduleMeal('breakfast', (MIN_QUEUE_SIZE ))
+    scheduleMeal('breakfast', (MIN_QUEUE_SIZE ), req_in)
 
     AsyncStorage.removeItem('lunch_queue')
     lunchQueue = []
     setLunchLoaded(false)
-    scheduleMeal('lunch', (MIN_QUEUE_SIZE ))
+    scheduleMeal('lunch', (MIN_QUEUE_SIZE ), req_in)
 
     AsyncStorage.removeItem('dinner_queue')
     dinnerQueue = []
     setDinnerLoaded(false)
-    scheduleMeal('dinner', (MIN_QUEUE_SIZE ))
+    scheduleMeal('dinner', (MIN_QUEUE_SIZE ), req_in)
 
   }
 
@@ -237,7 +239,7 @@ export default function App() {
       {
         if (q)
           breakfastQueue = q
-        scheduleMeal('breakfast', (MIN_QUEUE_SIZE - (q? q.length: 0)))
+        scheduleMeal('breakfast', (MIN_QUEUE_SIZE - (q? q.length: 0)), requests)
       }
       
       setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
@@ -272,7 +274,7 @@ export default function App() {
       {
         if (q)
           lunchQueue = q
-        scheduleMeal('lunch', (MIN_QUEUE_SIZE - (q? q.length: 0)))
+        scheduleMeal('lunch', (MIN_QUEUE_SIZE - (q? q.length: 0)), requests)
       }
         
       setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
@@ -308,7 +310,7 @@ export default function App() {
       {
         if (q)
           dinnerQueue = q
-        scheduleMeal('dinner', (MIN_QUEUE_SIZE - (q? q.length: 0)))
+        scheduleMeal('dinner', (MIN_QUEUE_SIZE - (q? q.length: 0)), requests)
       }
 
       // Update load progress
@@ -330,6 +332,28 @@ export default function App() {
 
   }, [authenticated])
 
+
+  // Update special requests through preferences page
+  function updateRequests(req_in, refresh)
+  {
+    
+    setRequests(req_in)
+    axios.post(`${BASE_URL}/updateRequests`, {user_id: userId, requests: req_in})
+    .then((res)=> {
+      // Refresh the meals
+      if (refresh)
+      {
+        
+        clearHistory()
+        refreshMeals(req_in)
+      }
+      
+    })
+    .catch((e) => {
+      alert(`Error: ${e}`)
+    })
+    // Can return this and do a .then .catch in pref page.
+  }
 
   // Log out through preference page
   function logOut()
@@ -384,7 +408,7 @@ export default function App() {
   }
 
   // Meal queues
-  function scheduleMeal(meal, count)
+  function scheduleMeal(meal, count, req_in)
   {
     // Increase the number of meals to generate
     switch(meal)
@@ -410,7 +434,7 @@ export default function App() {
     if ( ((meal === 'breakfast'? breakfastToGenerate : meal === 'lunch'? lunchToGenerate : dinnerToGenerate) === count) || getPref(P_FAST, false))
     {
       // Queue was empty so must start the recursive calls
-      generateMeal(meal)
+      generateMeal(meal, req_in)
     }
   }
 
@@ -472,6 +496,7 @@ function logIn(token)
   .then(async (res) => {
     setTokens(res.data.tokens)
     setMeals(res.data.meals)
+    setRequests(res.data.requests)
     setUserId(token)
     setSubscribed(res.data.subscribed)
 
@@ -604,7 +629,7 @@ function changeMeal(newMeal)
   }
 
   // Schedule the new meal to be generated: Starts meal gen or increases count
-  scheduleMeal(activeMeal, 1)
+  scheduleMeal(activeMeal, 1, requests)
 
   // We know the meal , we need to learn it
   if (right)
@@ -700,11 +725,11 @@ function cartMeal(meal)
 
 }
 
-async function generateMeal(meal)
+async function generateMeal(meal, req_in)
 {
   console.log('Generating a meal...')
   // Gather preferences from state
-  let requests = getPref(P_SPECIAL, 'None')
+  let req = req_in? req_in : requests
   let complexity_easy = getPref(P_EASY, true)? 1: 0
   let complexity_hard = getPref(P_MED, true)? 1: 0
   let complexity_medium = getPref(P_HARD, true)? 1: 0
@@ -734,7 +759,7 @@ async function generateMeal(meal)
   
 
   // Execute endpoint from server
-  axios.post(`${BASE_URL}/generateMeal`, {meal: meal, complexity: complexity, requests: requests, user_id: userId})
+  axios.post(`${BASE_URL}/generateMeal`, {meal: meal, complexity: complexity, requests: req, user_id: userId})
   .then(response => {
     let description = response.data.description
     let title = response.data.title
@@ -759,7 +784,7 @@ async function generateMeal(meal)
             // Load next meal if queue is not empty
             if (breakfastToGenerate > 0)
             {
-              generateMeal('breakfast')
+              generateMeal('breakfast', req)
             }
             else
             {
@@ -778,7 +803,7 @@ async function generateMeal(meal)
             // Load next meal if queue is not empty
             if (lunchToGenerate > 0)
             {
-              generateMeal('lunch')
+              generateMeal('lunch', req)
             }
             // If lunch just has not yet loaded, it has been loaded now
             else
@@ -797,7 +822,7 @@ async function generateMeal(meal)
             // Load next meal if queue is not empty
             if (dinnerToGenerate > 0)
             {
-              generateMeal('dinner')
+              generateMeal('dinner', req)
             }
 
             // If dinner just has not yet loaded, check if it is now loaded
@@ -830,7 +855,7 @@ async function generateMeal(meal)
   {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Navigation deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+          <Navigation requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
         </GestureHandlerRootView>
     );
   }

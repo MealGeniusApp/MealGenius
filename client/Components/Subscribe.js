@@ -1,14 +1,36 @@
-import React from 'react';
+import React , {useState} from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
+  Linking,
 } from 'react-native';
+import Purchases from 'react-native-purchases';
 
-const Subscribe = ({ subscribed, purchase }) => {
+
+
+const Subscribe = ({ subscribed, purchase, product }) => {
+  const [price, setPrice] = useState('')
+
+  async function getProduct()
+  {
+    // Store the product data
+    let products = await Purchases.getProducts(['cards']);
+    let product = products[0]
+
+    if ('introPrice' in product && product['introPrice'])
+    {
+      setPrice(product['introPrice']['priceString'])
+    }
+    else
+    {
+      setPrice(product['priceString'])
+    }
+  }
+  getProduct()
   return (
+    
     <View style={[styles.container, subscribed ? styles.activeContainer : null]}>
       {subscribed ? (
         <>
@@ -16,10 +38,20 @@ const Subscribe = ({ subscribed, purchase }) => {
         </>
       ) : (
         <>
-          <Text style={styles.inactiveText}>Subscribe Now!</Text>
-          <TouchableOpacity onPress={() => purchase()} style={styles.subscribeButton}>
-            <Text style={styles.buttonText}>Subscribe</Text>
+        <Text style={styles.inactiveText}>Unlock MealCards {'(renews monthly)'}</Text>
+
+        <View style = {styles.terms}>
+          
+          <TouchableOpacity onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')} style={styles.button}>
+            <Text style={styles.buttonTextTerms}>Terms</Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => purchase()} style={styles.subscribeButton}>
+            <Text style={styles.buttonText}>Subscribe: {price}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL('https://www.freeprivacypolicy.com/live/e1017c14-2f48-423c-9598-a306e394c30a')} style={styles.button}>
+            <Text style={styles.buttonTextTerms}>Privacy</Text>
+          </TouchableOpacity>
+        </View>
         </>
       )}
     </View>
@@ -57,12 +89,31 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginTop: 8,
+    marginHorizontal: 8
   },
   buttonText: {
     color: '#fff', // White color for text on the button
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  buttonTextTerms: {
+    color: '#fff', // White color for text on the button
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  terms: {
+    flexDirection: 'row', // Arrange children horizontally
+    justifyContent: 'space-between', // Evenly distribute space between children
+   
+  },
+  button: {
+    backgroundColor: '#2196F3', // Blue color for Subscribe button
+    borderRadius: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    justifyContent: 'center', 
   },
 });
 

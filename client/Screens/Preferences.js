@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Platform, View, Text, Button, StyleSheet, TextInput, TouchableWithoutFeedback, Keyboard, Switch, TouchableOpacity, Alert } from 'react-native';
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from '../PrefTypes'; // Import the pref constants
 import { useNavigation } from '@react-navigation/native';
@@ -13,11 +13,38 @@ const Preferences = (props) => {
       return res;
     }
 
+    // Keybaord open, then hide stuff to fix android bug    
+    const [isKeyboardOpen, setKeyboardOpen] = useState(false);
+
+    useEffect(() => {
+      const keyboardDidShowListener = Keyboard.addListener(
+        'keyboardDidShow',
+        () => {
+          setKeyboardOpen(true);
+        }
+      );
+      const keyboardDidHideListener = Keyboard.addListener(
+        'keyboardDidHide',
+        () => {
+          setKeyboardOpen(false);
+        }
+      );
+
+      return () => {
+        keyboardDidShowListener.remove();
+        keyboardDidHideListener.remove();
+      };
+    }, []);
+
     const navigation = useNavigation();
 
+    let defaultReqs = getDefaultSpecialRequests()
+    const [specialReqs, setSpecialReqs] = useState(defaultReqs);
+    // To ignore the change if they didnt change any details.
+    const [prevReqs, setPrevReqs] = useState(defaultReqs);
 
-    const [specialReqs, setSpecialReqs] = useState(getPref(P_SPECIAL, ''));
-    const [fastMode, setFastMode] = useState(getPref(P_FAST, false));
+
+    // const [fastMode, setFastMode] = useState(getPref(P_FAST, false));
 
     // For deletion:
     const [password, setPassword] = useState('');
@@ -27,10 +54,46 @@ const Preferences = (props) => {
     const [averageMeal, setAverageMeal] = useState(getPref(P_MED, true));
     const [complexMeal, setComplexMeal] = useState(getPref(P_HARD, true));
 
+    function getDefaultSpecialRequests()
+    {
+      // Set the value of special requests.
+      // Handle migration from Async to Mongo:
+      // If async has data and mongo is empty, use async and set mongo, without reloading, then set async to empty
+      
+      if (getPref(P_SPECIAL, '') && !props.requests)
+      {
+        let pref = getPref(P_SPECIAL, '')
+        props.updateRequests(pref, false)
+        setPref(P_SPECIAL, '')
+
+        return pref
+
+      }
+      // Otherwise use mongo data
+      else
+      {
+        return props.requests
+      }
+    }
+
+    const handleUpdateReqs = () => {
+      // Done updating preferences. Send the value
+
+      // save in DB and refresh meals (true)
+      // iff there was a change.
+      if (specialReqs != prevReqs)
+        props.updateRequests(specialReqs, true);
+
+      // Old method used async storage
+      // setSpecialReqs(newText);
+      // setPref(P_SPECIAL, newText);
+    }
+
     const handleTextChange = (newText) => {
       if (newText.length <= 300) {
+        // Set requests locally
         setSpecialReqs(newText);
-        setPref(P_SPECIAL, newText);
+        
       }
     };
 
@@ -62,6 +125,8 @@ const Preferences = (props) => {
 
     
   
+    // If bringing this button back, besure to also change refreshMeals in App.js to remove paramater req_in.
+    // State issue must be genuinely solved in this case.
     const handleRefreshMeals = () => {
       // Show confirmation dialog before refreshing meals
       Alert.alert(
@@ -172,20 +237,13 @@ const Preferences = (props) => {
               numberOfLines={10}
               value={specialReqs}
               onChangeText={handleTextChange}
+              onEndEditing={handleUpdateReqs}
+              onFocus={() => setPrevReqs(specialReqs)}
             />
 
-            {/* <View style={styles.switch}>
-              <Text style={{ fontSize: 16 }}>Fast Mode</Text>
-              <Switch
-                value={fastMode}
-                onValueChange={() => {
-                  setFastMode(!fastMode);
-                  setPref(P_FAST, !fastMode);
-                }}
-              />
-            </View> */}
-            <Text style = {{marginBottom: "5%", textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>You can click Refresh Meals below to remove outdated meals after changing.</Text>
-
+            <Text style = {{marginBottom: "5%", textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Your meals with refresh automatically when changing.</Text>
+          {!isKeyboardOpen && 
+          ( <View>
             <Text style={styles.title}>Permitted Complexities</Text>
             <View>
               <View style={styles.switch}>
@@ -219,15 +277,18 @@ const Preferences = (props) => {
                 />
               </View>
             </View>
+            
+            
             <Text style = {{marginTop: 'auto', textAlign: 'center', fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 14}}>Tips</Text>
             <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Swipe left to discard, swipe right to save</Text>
+            <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>{`Tap "${props.meal}" at the top of the screen to view other meals.`}</Text>
             <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>In the List & Cart tabs, long press the left side of an item to delete it.</Text>
-            <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>{`Tap the word "${props.meal}" at the top of the screen to view other meals.`}</Text>
             <Text style = {{marginBottom: Platform.OS === 'ios' && Platform.isPad ? 45 : 9 ,textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
 
-            <Subscribe purchase = {props.purchase} subscribed={props.subscribed}></Subscribe>
-
+            <Subscribe purchase = {props.purchase} subscribed= {props.subscribed}></Subscribe>
+            </View>)}
           </View>
+          {!isKeyboardOpen && (
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.buttonWithBorder, styles.customButton]}
@@ -240,16 +301,16 @@ const Preferences = (props) => {
               style={[styles.buttonWithBorder, styles.customButton]}
               onPress={() => {setDelAccount(true)}}
             >
-              <Text style={styles.buttonText}>Delete</Text>
+              <Text style={styles.buttonText}>Delete Account</Text>
             </TouchableOpacity>
 
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.buttonWithBorder, styles.customButton]}
               onPress={handleRefreshMeals}
             >
               <Text style={styles.buttonText}>Refresh Meals</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
               style={[styles.buttonWithBorder, styles.customButton]}
@@ -257,8 +318,12 @@ const Preferences = (props) => {
             >
               <Text style={styles.buttonText}>Clear History</Text>
             </TouchableOpacity>
-          </View>
+          </View>)}
+          
+        
         </View>
+        
+        
       </TouchableWithoutFeedback>
     );
   }

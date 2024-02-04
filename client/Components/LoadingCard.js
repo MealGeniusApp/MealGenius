@@ -10,12 +10,13 @@ const LoadingCard = (props) => {
 
       <View style={styles.imagecontainer}>
           <Image
-            source={{ uri: 'https://i.gifer.com/4V0b.gif' }}
+            source={require('../assets/load.gif')}
             style={styles.image}
           />
       </View>
         
-      <Text style={styles.description}>Generating meals...</Text>
+      <Text style={styles.description}>{props.requests? 'Generating meals based on:': 'Generating meals...'}</Text>
+      {(props.requests && (<Text style={styles.description}>{props.requests}</Text>))}
 
       <Progress.Bar progress={props.progress} width={Platform.OS === 'ios' && Platform.isPad ? 400 : 200} />
 

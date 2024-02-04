@@ -9,7 +9,7 @@ const NoTokens = (props) => {
 
       <View style={styles.imagecontainer}>
           <Image
-            source={{ uri: 'https://assets.stickpng.com/images/5a81af7d9123fa7bcc9b0793.png' }}
+            source={require('../assets/notokens.png')}
             style={styles.image}
           />
       </View>

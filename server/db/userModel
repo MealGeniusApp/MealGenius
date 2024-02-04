@@ -62,6 +62,10 @@ tokens: {
     type: Number,
     default: 0
 },
+requests: {
+    type: String,
+    default: ''
+},
 
 history: {
     breakfast: [],

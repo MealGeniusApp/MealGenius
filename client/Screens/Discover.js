@@ -23,7 +23,7 @@ const Discover = (props) => {
       return (
           <View>
           <View style={styles.container}>
-              <LoadingCard progress = {props.loadProgress}/>
+              <LoadingCard requests = {props.requests} progress = {props.loadProgress}/>
           </View>
           </View>
       

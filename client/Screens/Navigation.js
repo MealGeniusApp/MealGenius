@@ -58,7 +58,7 @@ const Navigation = (props) => {
       >
         <Tab.Screen name="Discover" options={{
           headerTitle: () => <CustomHeader type = "Discover" />,
-        }} children={()=><Discover swipe={props.swipe} nextMeal = {props.nextMeal} loading = {props.loading} loadProgress = {props.loadProgress} tokens = {props.tokens}/>}/>
+        }} children={()=><Discover requests={props.requests} swipe={props.swipe} nextMeal = {props.nextMeal} loading = {props.loading} loadProgress = {props.loadProgress} tokens = {props.tokens}/>}/>
         <Tab.Screen name="List" options={{
           headerTitle: () => <CustomHeader type= "Saved"/>,
         }}
@@ -72,7 +72,7 @@ const Navigation = (props) => {
         children={()=><Cart forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
     
         <Tab.Screen name="Preferences"
-        children={()=><Preferences meal = {props.mealTitle.toUpperCase()} subscribed = {props.subscribed} purchase = {props.purchase} tokens = {props.tokens} managementURL = {props.managementURL} refreshMeals = {props.refreshMeals} prefs = {props.prefs} setFastMode = {props.setFastMode} savePreferences = {props.savePreferences} clearHistory = {props.clearHistory} logout={props.logout} deleteAccount= {props.deleteAccount}/>} />
+        children={()=><Preferences requests = {props.requests} updateRequests= {props.updateRequests} meal = {props.mealTitle.toUpperCase()} subscribed = {props.subscribed} purchase = {props.purchase} tokens = {props.tokens} managementURL = {props.managementURL} refreshMeals = {props.refreshMeals} prefs = {props.prefs} setFastMode = {props.setFastMode} savePreferences = {props.savePreferences} clearHistory = {props.clearHistory} logout={props.logout} deleteAccount= {props.deleteAccount}/>} />
       </Tab.Navigator>
     </NavigationContainer>
   );
