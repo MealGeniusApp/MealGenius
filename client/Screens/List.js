@@ -34,6 +34,7 @@ const List = ({ meals, meal, forgetMeal, cartMeal }) => {
 
 
   const onPress = (meal) => {
+    setActiveTab('Ingredients')
     setSelectedMeal(meal);
     setModalVisible(true);
   };
@@ -100,21 +101,34 @@ const List = ({ meals, meal, forgetMeal, cartMeal }) => {
             <Image source={{ uri: selectedMeal?.image }} style={styles.image} />
 
             {/* Tab Buttons */}
-            <View style={styles.tabContainer}>
-                <TouchableOpacity
-                  style={[styles.tabButton, activeTab === 'Ingredients' && styles.activeTab]}
-                  onPress={() => setActiveTab('Ingredients')}
-                >
-                  <Text style={styles.tabText}>Ingredients</Text>
-                </TouchableOpacity>
+            {selectedMeal?.instructions.trim() !== '' && (
+              <View style={styles.tabContainer}>
+              <TouchableOpacity
+                style={[styles.tabButton, activeTab === 'Ingredients' && styles.activeTab]}
+                onPress={() => setActiveTab('Ingredients')}
+              >
+                <Text style={styles.tabText}>Ingredients</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.tabButton, activeTab === 'Instructions' && styles.activeTab]}
-                  onPress={() => setActiveTab('Instructions')}
-                >
-                  <Text style={styles.tabText}>Instructions</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={[styles.tabButton, activeTab === 'Instructions' && styles.activeTab]}
+                onPress={() => setActiveTab('Instructions')}
+              >
+                <Text style={styles.tabText}>Instructions</Text>
+              </TouchableOpacity>
+
+            {selectedMeal?.nutrition && (
+              <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'Nutrition' && styles.activeTab]}
+              onPress={() => setActiveTab('Nutrition')}
+            >
+              <Text style={styles.tabText}>Nutrition</Text>
+            </TouchableOpacity>
+            )}
+              
+            </View>
+            )}
+            
 
             {/* Content based on active tab */}
             <ScrollView>
@@ -123,7 +137,7 @@ const List = ({ meals, meal, forgetMeal, cartMeal }) => {
                   selectedMeal.instructions.trim() === '' ? (
                     <View style={styles.tokenContainer}>
                       <Text style={styles.loadtext}>Generating awesomeness, hang tight</Text>
-                      <Image source={{ uri: 'https://i.gifer.com/4V0b.gif' }} style={styles.loadimage} />
+                      <Image source={require('../assets/load.gif')} style={styles.loadimage} />
                     </View>
                   ) :
                   selectedMeal.ingredients.split('\n').map((ingredient, index) => (
@@ -137,13 +151,28 @@ const List = ({ meals, meal, forgetMeal, cartMeal }) => {
                   selectedMeal.instructions.trim() === '' ? (
                     <View style={styles.tokenContainer}>
                       <Text style={styles.loadtext}>Generating awesomeness, hang tight</Text>
-                      <Image source={{ uri: 'https://i.gifer.com/4V0b.gif' }} style={styles.loadimage} />
+                      <Image source={require('../assets/load.gif')} style={styles.loadimage} />
                     </View>
                   ) : (
                     selectedMeal.instructions.split('\n').map((instruction, index) => (
                       instruction.length > 2 && (
                         <View key={index} style={styles.tokenContainer}>
                           <Text style={styles.tokenText}>{instruction}</Text>
+                        </View>
+                      )
+                    ))
+                  )
+                ) : activeTab === 'Nutrition' ? (
+                  selectedMeal.instructions.trim() === '' ? (
+                    <View style={styles.tokenContainer}>
+                      <Text style={styles.loadtext}>Generating awesomeness, hang tight</Text>
+                      <Image source={require('../assets/load.gif')} style={styles.loadimage} />
+                    </View>
+                  ) : (
+                    selectedMeal.nutrition.split('\n').map((fact, index) => (
+                      fact.length > 2 && (
+                        <View key={index} style={styles.tokenContainer}>
+                          <Text style={styles.tokenText}>{fact.match(/[a-zA-Z].*/)}</Text>
                         </View>
                       )
                     ))

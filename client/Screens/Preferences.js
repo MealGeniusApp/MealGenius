@@ -244,7 +244,7 @@ const Preferences = (props) => {
             <Text style = {{marginBottom: "5%", textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Your meals with refresh automatically when changing.</Text>
           {!isKeyboardOpen && 
           ( <View>
-            <Text style={styles.title}>Permitted Complexities</Text>
+            {/* <Text style={styles.title}>Permitted Complexities</Text>
             <View>
               <View style={styles.switch}>
                 <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16  }}>Simple</Text>
@@ -276,7 +276,7 @@ const Preferences = (props) => {
                   }}
                 />
               </View>
-            </View>
+            </View> */}
             
             
             <Text style = {{marginTop: 'auto', textAlign: 'center', fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 14}}>Tips</Text>

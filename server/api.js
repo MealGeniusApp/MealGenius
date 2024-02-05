@@ -938,7 +938,7 @@ const { default: mongoose } = require('mongoose');
     user.save()
 
     // Form a message to ask chatGPT
-    let query = `Give me a list of instructions and ingredients for ${meal.title}: ${meal.description}. Your response must be structured in this way: INGREDIENTS: {numbered list of ingredients} INSTRUCTIONS: {numbered list of instructions}. Do not exceed 200 words in your combined response.`
+    let query = `Give me a list of instructions, ingredients and nutrition for ${meal.title}: ${meal.description}. Your response must be structured in this way: INGREDIENTS: {numbered list of ingredients} INSTRUCTIONS: {numbered list of instructions} NUTRITION: {list of nutrition facts}. Do not exceed 250 words in your combined response. Do not deviate from this format.`
 
     const endpoint = 'https://api.openai.com/v1/chat/completions';
 
@@ -971,14 +971,15 @@ const { default: mongoose } = require('mongoose');
     const latestMeal = user.meals[meal.meal].find(item => item.date === meal.date);
 
     latestMeal.ingredients = result.substring(result.toUpperCase().indexOf('IGREDIENTS:')+ 14,  result.toUpperCase().indexOf('INSTRUCTIONS') - 1)
-    latestMeal.instructions = result.substring(result.toUpperCase().indexOf('INSTRUCTIONS:') + 14, result.length)
-
+    latestMeal.instructions = result.substring(result.toUpperCase().indexOf('INSTRUCTIONS:') + 14, result.toUpperCase().indexOf('NUTRITION') - 1)
+    latestMeal.nutrition = result.substring(result.toUpperCase().indexOf('NUTRITION') + 11, result.length)
 
     // Prepare the update query
     const updateValues = {
       $set: {
         ['meals.' + meal.meal + '.$[element].ingredients']: latestMeal.ingredients,
         ['meals.' + meal.meal + '.$[element].instructions']: latestMeal.instructions,
+        ['meals.' + meal.meal + '.$[element].nutrition']: latestMeal.nutrition,
       }
     };
     
