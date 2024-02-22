@@ -2,7 +2,7 @@
   "expo": {
     "name": "MealGenius",
     "slug": "mealgenius",
-    "version": "2.0.5",
+    "version": "2.0.7",
     "sdkVersion": "49.0.0",
     "platforms": [
       "ios",

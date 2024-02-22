@@ -33,7 +33,15 @@ const Cart = ({ meals, meal, forgetMeal, cartMeal }) => {
     if (isOnLeftHalf)
     {
       // Delete the item
-      forgetMeal(meal)
+      Alert.alert(
+        'Delete Meal',
+        'Are you sure?\nHolding down the left-side prompts a deletion.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', onPress: () => forgetMeal(meal) },
+        ],
+        { cancelable: true }
+      );
 
     }
     else

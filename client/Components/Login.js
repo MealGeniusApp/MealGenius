@@ -177,7 +177,7 @@ export default function LoginScreen(props) {
         
         if (res.data.trial)
         {
-          alert("Welcome! You have been granted 30 free swipes! Please view the Preferences tab to learn how to use the app.")
+          alert("Welcome! You have been granted some free swipes! Please view the Preferences tab to learn how to use the app.")
         }
       }
       

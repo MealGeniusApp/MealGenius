@@ -44,6 +44,7 @@ const List = ({ meals, meal, forgetMeal, cartMeal }) => {
     setSelectedMeal(null)
   };
 
+  // Delete the item on long press
   const handleLongPress = (event, meal) => {
     // Vibrate the phone briefly
     Vibration.vibrate(50);
@@ -55,8 +56,17 @@ const List = ({ meals, meal, forgetMeal, cartMeal }) => {
     // Use isOnLeftHalf as needed
     if (isOnLeftHalf)
     {
-      // Delete the item
-      forgetMeal(meal)
+      // Delete the item: confirm first
+      Alert.alert(
+        'Delete Meal',
+        'Are you sure?\nHolding down the left-side prompts a deletion.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', onPress: () => forgetMeal(meal) },
+        ],
+        { cancelable: true }
+      );
+      
 
     }
     else

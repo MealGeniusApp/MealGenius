@@ -2,6 +2,7 @@
   const dbConnect = require("./db/dbConnect");
   const User = require("./db/userModel");
   const Trial = require("./db/trialModel");
+  const Options = require("./db/optionsModel");
   const cron = require('node-cron');
   var router = express.Router();
   require('dotenv').config();
@@ -103,7 +104,7 @@ const { default: mongoose } = require('mongoose');
       // Email a warning to all inactive users
       const dormantUsers = await User.find({
         $and: [
-          { dormant: { $gte: 90 } }
+          { dormant: { $gte: 365 } }
         ]
       });
 
@@ -117,7 +118,7 @@ const { default: mongoose } = require('mongoose');
             to: user.email,
             subject: `MealGenius account scheduled for deletion`,
             text: `Your MealGenius account hasn't been accessed in ${user.dormant} days, 
-            and data is scheduled to be purged from our system in 10 days on ${formattedDate}. 
+            and data is scheduled to be purged from our system on ${formattedDate}. 
             To keep your data, simply log in to your account. We hope to see you soon!`,
           };
         
@@ -631,6 +632,30 @@ const { default: mongoose } = require('mongoose');
           user.save()
             // return success if the new user is added to the database successfully
             .then((result) => {
+              // Email me of the new user, if option is enabled
+              Options.findOne({}).then((option_doc) => {
+                if (option_doc.registerAlerts)
+                {
+                  // Send the email
+                  const mailOptions = {
+                    from: process.env.MAILER_USER,
+                    to: process.env.ADMIN_EMAIL,
+                    subject: `MealGenius new user!`,
+                    text: `${request.body.email} has signed up!`,
+                  };
+                
+                  // Send the email
+                  transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                      console.log('Error sending new user email (to myself):', error);
+                    } else {
+                    }
+                  });
+                  
+                }
+
+              })
+
               response.status(201).send({
                 message: "User Created Successfully",
                 result,
