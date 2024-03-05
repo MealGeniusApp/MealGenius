@@ -45,7 +45,7 @@ const CartCard = ({ meal, onPress, onLongPress }) => {
           />
         )}
 
-        <Text style={styles.title}>{meal.title}</Text>
+      <Text style={styles.title}>{meal.title.length > 29? meal.title.substring(0, 28) + '..': meal.title}</Text>    
          {
 
             !selected? (

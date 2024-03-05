@@ -85,7 +85,8 @@ const Cart = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
           {/* Render only meals containing the search text */}
           {showSearch ? (
               <View key={meal}>
-                {meals[meal].filter(mealItem => mealItem.title.toLowerCase().includes(search.toLowerCase())).map((mealItem, index) => (
+                {meals[meal].filter(mealItem => mealItem.cart && mealItem.title.toLowerCase().includes(search.toLowerCase()))
+.map((mealItem, index) => (
                   <TouchableWithoutFeedback key={index}>
                     <View>
                       <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
@@ -97,7 +98,7 @@ const Cart = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
           ) : (
             // Render all meals if showSearch is false
               <View key={meal}>
-                {meals[meal].map((mealItem, index) => (
+                {meals[meal].filter(mealItem => mealItem.cart).map((mealItem, index) => (
                   <TouchableWithoutFeedback key={index}>
                     <View>
                       <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
