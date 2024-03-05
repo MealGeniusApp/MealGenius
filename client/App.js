@@ -1,5 +1,5 @@
 
-import {AppState, Platform } from 'react-native';
+import {AppState, Platform, Modal, View, StyleSheet, Text, TouchableOpacity, TextInput, TouchableWithoutFeedback, Keyboard, Linking} from 'react-native';
 import Navigation from './Screens/Navigation';
 import Login from './Components/Login';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,8 +12,10 @@ import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Impor
 import Purchases from 'react-native-purchases';
 
 
-//const BASE_URL = "http://11.42.12.174:6971"
+// Meal Genius server url
 const BASE_URL = "http://54.204.246.135:3001"
+// Demo video url
+const DEMO_URL = "https://youtu.be/udKK51jYs7M"
 const APPL_API = "appl_iymEcrjJXGyUyYLMNqGXZYiaKvP"
 const GOOG_API = "goog_NxhhAZhHJkJSHDfsFAPtYIyEClP"
 
@@ -43,11 +45,14 @@ export default function App() {
   const [dinnerLoaded, setDinnerLoaded] = useState(false)
 
   const [tokens, setTokens] = useState(0)
+  const [email, setEmail] = useState('')
   const [userId, setUserId] = useState()
   const [meals, setMeals] = useState()
   const [requests, setRequests] = useState('')
 
   const [nextMeal, setNextMeal] = useState('')
+  const [search, setSearch] = useState('') // For list and cart tab
+  const [showSearch, setShowSearch] = useState(false)
 
   const DEFAULT_MEAL = 'breakfast'
   const [activeMeal, setActiveMeal] = useState(DEFAULT_MEAL)
@@ -58,7 +63,46 @@ export default function App() {
   // Automatically check to see if we are logged in
   const [preInit, setPreInit] = useState(true)
   const [loading, setLoading] = useState(true)
+
+  const [isModalVisible, setModalVisible] = useState(false)
   const MIN_QUEUE_SIZE = 8
+
+
+  // SEARCHING: Toggle the search bar
+  function toggleSearch()
+  {
+    setShowSearch(!showSearch)
+  }
+
+  // SEARCHING: Update the search criteria
+  function updateSearch(query)
+  {
+    setSearch(query)
+  }
+
+  // Help modal text
+  const [textInputValue, setTextInputValue] = useState('');
+
+  // Help modal
+  const handleChangeText = (text) => {
+    setTextInputValue(text);
+  };
+
+  // Submit help message
+  const handleSubmit = () => {
+    // Close modal
+    closeModal();
+
+    // Send the message
+    axios.post(`${BASE_URL}/contact`, {msg: textInputValue, uid: userId, email: email})
+    .then(() => {
+      alert("Your message was recieved!")
+    })
+    .catch(() => {
+      alert("We're sorry, there was an error.\nPlease email MealGeniusApp@gmail.com")
+    })
+    setTextInputValue('');
+  };
 
   // When we authenticate, initialize.
   useEffect(() =>
@@ -332,6 +376,15 @@ export default function App() {
 
   }, [authenticated])
 
+  // Hide / show the help modal
+  const showHelpModal = () => {
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
+
 
   // Update special requests through preferences page
   function updateRequests(req_in, refresh)
@@ -497,6 +550,7 @@ function logIn(token)
     setTokens(res.data.tokens)
     setMeals(res.data.meals)
     setRequests(res.data.requests)
+    setEmail(res.data.email)
     setUserId(token)
     setSubscribed(res.data.subscribed)
 
@@ -855,7 +909,71 @@ async function generateMeal(meal, req_in)
   {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Navigation requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+          <Navigation showSearch = {showSearch} updateSearch = {updateSearch} toggleSearch = {toggleSearch} search = {search} help = {showHelpModal} requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+          
+          {/* Help Modal */}
+          
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isModalVisible}
+            onRequestClose={closeModal}
+          >
+            <View style={styles.modalContainer}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+              <View style={styles.modalContent}>
+                {/* Title and Close Button */}
+                <View style={styles.titleContainer}>
+                  <Text style={styles.title}>Help</Text>
+                  <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>x</Text>
+                  </TouchableOpacity>
+                </View>
+
+{/* Main Content view (Top / button) */}
+              <View style = {{flex:1, justifyContent: 'space-between'}}>
+{/* Message Content */}
+              <View style ={{marginTop: '5%'}}>
+              <Text style={styles.text}>Have a comment / concern?</Text>
+                <TextInput
+                  style={{
+                    height: Platform.OS === 'ios' && Platform.isPad ? 300 : 190,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: 'gray',
+                    padding: 10,
+                    margin: 5,
+                    fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 14
+                  }}
+                  multiline={true}
+                  numberOfLines={10}
+                  value={textInputValue}
+                  onChangeText={handleChangeText}
+                />
+                {(textInputValue && 
+                <TouchableOpacity onPress={() => handleSubmit()} style={styles.demoButton}>
+                  <Text style={styles.buttonText}>Send Message</Text>
+                </TouchableOpacity>
+                )}
+              </View>
+
+                    {/* Tutorial appears on the button  */}
+              <View>
+                <Text style={styles.text}>Or, watch a video app walkthrough</Text>
+
+                <TouchableOpacity onPress={() => {Linking.openURL(DEMO_URL)
+      .catch((err) => console.error('An error occurred', err))}} style={styles.demoButton}>
+                  <Text style={styles.buttonText}>Watch Tutorial</Text>
+                </TouchableOpacity>
+              </View>
+
+              </View>
+              {/* Above ends the main content view (top and bottom) */}
+                
+              </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </Modal>
         </GestureHandlerRootView>
     );
   }
@@ -865,3 +983,55 @@ async function generateMeal(meal, req_in)
 
   
 }
+
+const styles = StyleSheet.create({
+  buttonText: {
+    color: '#fff', // White color for text on the button
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  demoButton: {
+    backgroundColor: '#2196F3', // Blue color for Subscribe button
+    borderRadius: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginHorizontal: 8
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    height: '80%',
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 8,
+  },
+  title: {
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 40 : 18,
+    textAlign: 'center',
+  },
+  text: {
+    fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 18,
+    textAlign: 'center',
+  },
+  
+  closeButton: {
+    alignSelf: 'center',
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: 'lightgray',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  
+});

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform, TouchableOpacity } from 'react-native';
+import Subscribe from '../Components/Subscribe';
 
 const NoTokens = (props) => {
   return (
@@ -15,7 +16,8 @@ const NoTokens = (props) => {
       </View>
         
       <Text style={styles.title}>Swipe limit reached!</Text>
-      <Text style={styles.description}>Please purchase more swipes to continue. </Text>
+      <Text style={styles.description}>Please subscribe to continue. </Text>
+      <Subscribe simple = {true}></Subscribe>
 
     
 

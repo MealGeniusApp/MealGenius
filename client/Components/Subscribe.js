@@ -10,7 +10,7 @@ import Purchases from 'react-native-purchases';
 
 
 
-const Subscribe = ({ subscribed, purchase, product }) => {
+const Subscribe = ({ subscribed, purchase, product, simple }) => {
   const [price, setPrice] = useState('')
 
   async function getProduct()
@@ -29,6 +29,12 @@ const Subscribe = ({ subscribed, purchase, product }) => {
     }
   }
   getProduct()
+  if (simple)
+  {
+    return (<TouchableOpacity onPress={() => purchase()} style={styles.subscribeButton}>
+    <Text style={styles.buttonText}>Subscribe: {price}</Text>
+  </TouchableOpacity>)
+  }
   return (
     
     <View style={[styles.container, subscribed ? styles.activeContainer : null]}>

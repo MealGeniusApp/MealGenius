@@ -232,6 +232,22 @@ const { default: mongoose } = require('mongoose');
     
           if (user)
           {
+            // Send me a notice email
+            const mailOptions = {
+              from: process.env.MAILER_USER,
+              to: process.env.ADMIN_EMAIL,
+              subject: `🎉 MealGenius NEW SUBSCRIBER! `,
+              text: `Woohoo! 🥳 ${user.email} just subscribed!`,
+            };
+          
+            // Send the email
+            transporter.sendMail(mailOptions, (error, info) => {
+              if (error) {
+                console.log('Error sending warning email:', error);
+              } else {
+              }
+            });
+
             res.status(200).send({
               message: "Success!",
               tokens: user.tokens
@@ -328,6 +344,7 @@ const { default: mongoose } = require('mongoose');
             meals: user.meals,
             requests: user.requests,
             tokens: user.tokens,
+            email: user.email,
             subscribed: await isSubscribed(req.body.user_id)
           });
         }
@@ -478,7 +495,7 @@ const { default: mongoose } = require('mongoose');
               from: process.env.MAILER_USER,
               to: user.email,
               subject: `${code} is your MealGenius confirmaition code`,
-              text: `Your MealGenius account was accessed from a new location. If this was you, enter code ${code} in the app. If not, you can change your password in the app.`,
+              text: `Your MealGenius account was accessed from a new location. If this was you, enter code ${code} in the app. If not, you can change your password in the app. Feel free to reply to this email for any assistance!`,
             };
           
             // Send the email
@@ -616,6 +633,28 @@ const { default: mongoose } = require('mongoose');
           }
   })
 
+  // Send help email
+  router.post("/contact", (request, response) => {
+    const mailOptions = {
+      from: process.env.MAILER_USER,
+      to: process.env.MAILER_USER,
+      bcc: process.env.ADMIN_EMAIL,
+      subject: `MealGenius Support`,
+      text: `${request.body.msg}\n\nfrom ${request.body.email} (${request.body.uid})`,
+    };
+  
+    // Send the email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log('Error sending support email from user:', error);
+        response.status(500).send("Error")
+      } else {
+        response.status(200).send("Success")
+
+      }
+    });
+  })
+
   // register endpoint
   router.post("/register", (request, response) => {
       // hash the password
@@ -640,7 +679,7 @@ const { default: mongoose } = require('mongoose');
                   const mailOptions = {
                     from: process.env.MAILER_USER,
                     to: process.env.ADMIN_EMAIL,
-                    subject: `MealGenius new user!`,
+                    subject: `MealGenius new user! 😁`,
                     text: `${request.body.email} has signed up!`,
                   };
                 

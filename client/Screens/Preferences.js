@@ -279,17 +279,22 @@ const Preferences = (props) => {
             </View> */}
             
             
-            <Text style = {{marginTop: 'auto', textAlign: 'center', fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 14}}>Tips</Text>
-            <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Swipe left to discard, swipe right to save</Text>
-            <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>{`Tap "${props.meal}" at the top of the screen to view other meals.`}</Text>
-            <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>In the List & Cart tabs, long press the left side of an item to delete it.</Text>
-            <Text style = {{marginBottom: Platform.OS === 'ios' && Platform.isPad ? 45 : 9 ,textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
-
-            <Subscribe purchase = {props.purchase} subscribed= {props.subscribed}></Subscribe>
             </View>)}
           </View>
           {!isKeyboardOpen && (
+          <View>
+            <View>
+              <Text style = {{marginTop: 'auto', textAlign: 'center', fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 14}}>Tips</Text>
+              <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Swipe left to discard, swipe right to save</Text>
+              <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>{`Tap "${props.meal}" at the top of the screen to view other meals.`}</Text>
+              <Text style = {{textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>In the List & Cart tabs, long press the left side of an item to delete it.</Text>
+              <Text style = {{marginBottom: Platform.OS === 'ios' && Platform.isPad ? 45 : 9 ,textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Long press the right side to toggle the item in or out of the cart.</Text>
+
+              <Subscribe purchase = {props.purchase} subscribed= {props.subscribed} simple = {false}></Subscribe>
+            </View>
+            
           <View style={styles.buttonContainer}>
+            
             <TouchableOpacity
               style={[styles.buttonWithBorder, styles.customButton]}
               onPress={handleLogout}
@@ -318,6 +323,7 @@ const Preferences = (props) => {
             >
               <Text style={styles.buttonText}>Clear History</Text>
             </TouchableOpacity>
+          </View>
           </View>)}
           
         

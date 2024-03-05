@@ -2,18 +2,16 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
-  Modal,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
+  Alert,
   TouchableWithoutFeedback,
   Vibration,
+  TextInput,
+  Keyboard
 } from 'react-native';
 import CartCard from '../Components/CartCard';
 
 // Render a list of all meals saved in the database
-const Cart = ({ meals, meal, forgetMeal, cartMeal }) => {
+const Cart = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal }) => {
 
 
 
@@ -54,17 +52,64 @@ const Cart = ({ meals, meal, forgetMeal, cartMeal }) => {
   
 
   return (
-    <ScrollView>
+    <View>
+      { showSearch && (
+          <View style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#fff',
+            
+            }}>
+
+            <TextInput
+              placeholder="Search here..."
+              returnKeyType="done" // Set returnKeyType to 'done' to display 'Go' button on the keyboard
+              onSubmitEditing={()=> {Keyboard.dismiss()}} // Handle submit action when 'Go' button is pressed
+              value = {search}
+              onChangeText={text => updateSearch(text)} // Update search query
+              style={{
+                width: '95%',
+                height: 40,
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 5,
+                paddingHorizontal: 10,
+                margin: 10,
+              }}
+            />
+        </View>)}
+
+    <ScrollView style = {{height: "100%"}}>
+      <TouchableWithoutFeedback onPress = {() => Keyboard.dismiss()}>
       <View>
-        {meals[meal].filter(mealItem => mealItem.cart).map((mealItem, index) => (
-          <TouchableWithoutFeedback key={index}>
-            <View>
-              <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
-            </View>
-          </TouchableWithoutFeedback>
-        ))}
-      </View>
+          {/* Render only meals containing the search text */}
+          {showSearch ? (
+              <View key={meal}>
+                {meals[meal].filter(mealItem => mealItem.title.toLowerCase().includes(search.toLowerCase())).map((mealItem, index) => (
+                  <TouchableWithoutFeedback key={index}>
+                    <View>
+                      <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
+                    </View>
+                  </TouchableWithoutFeedback>
+                ))}
+              </View>
+            
+          ) : (
+            // Render all meals if showSearch is false
+              <View key={meal}>
+                {meals[meal].map((mealItem, index) => (
+                  <TouchableWithoutFeedback key={index}>
+                    <View>
+                      <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
+                    </View>
+                  </TouchableWithoutFeedback>
+                ))}
+              </View>
+          )}
+        </View>
+        </TouchableWithoutFeedback>
     </ScrollView>
+    </View>
   );
 };
 
