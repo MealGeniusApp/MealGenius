@@ -1,7 +1,11 @@
-import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { useState } from 'react';
+import RNFS from 'react-native-fs';
 
-const ListCard = ({ meal, onPress, onLongPress }) => {
+const ListCard = ({ meal, onPress, onLongPress, cache }) => {
+  const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
+  const image = `${RNFS.DocumentDirectoryPath}/saved/${meal.meal}/${meal.date}.jpg`
+
   return (
     <TouchableOpacity
       onPress={() => onPress(meal)}
@@ -9,14 +13,18 @@ const ListCard = ({ meal, onPress, onLongPress }) => {
       style={styles.card}
     >
       {/* Add image on the left */}
-      <Image source={{ uri: meal.image }} style={styles.image} />
+      <Image 
+        source={image? (!failedToLoad? (meal?.image? {uri: cache? (RNFS.exists(image)? image: meal.image): meal.image} : require('../assets/notfound.jpg')): (meal?.image? {uri: meal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
+        style={styles.image}
+        onError={() => {setFailedToLoad(true)}} 
+        />
 
       {/* Text content on the right */}
       <View style={styles.textContainer}>
         {/* Conditionally render the image in the top right corner */}
         {meal.cart && (
           <Image
-            source={{ uri: 'https://cdn1.iconfinder.com/data/icons/leto-ecommerce-shopping-1/64/checkout_cart_shopping_shop-1024.png' }}
+            source={ require('../assets/cart.png')}
             style={styles.cartImage}
           />
         )}

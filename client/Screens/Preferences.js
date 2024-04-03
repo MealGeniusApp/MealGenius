@@ -42,6 +42,7 @@ const Preferences = (props) => {
     const [specialReqs, setSpecialReqs] = useState(defaultReqs);
     // To ignore the change if they didnt change any details.
     const [prevReqs, setPrevReqs] = useState(defaultReqs);
+    const [cache, setCache] = useState(props.cache)
 
 
     // const [fastMode, setFastMode] = useState(getPref(P_FAST, false));
@@ -50,9 +51,9 @@ const Preferences = (props) => {
     const [password, setPassword] = useState('');
     const [delAccount, setDelAccount] = useState(false);
 
-    const [simpleMeal, setSimpleMeal] = useState(getPref(P_EASY, true));
-    const [averageMeal, setAverageMeal] = useState(getPref(P_MED, true));
-    const [complexMeal, setComplexMeal] = useState(getPref(P_HARD, true));
+    // const [simpleMeal, setSimpleMeal] = useState(getPref(P_EASY, true));
+    // const [averageMeal, setAverageMeal] = useState(getPref(P_MED, true));
+    // const [complexMeal, setComplexMeal] = useState(getPref(P_HARD, true));
 
     function getDefaultSpecialRequests()
     {
@@ -244,6 +245,18 @@ const Preferences = (props) => {
             <Text style = {{marginBottom: "5%", textAlign: 'center',fontSize: Platform.OS === 'ios' && Platform.isPad ? 20 : 11}}>Your meals with refresh automatically when changing.</Text>
           {!isKeyboardOpen && 
           ( <View>
+            {/* Option for caching images */}
+            <View style={styles.switch}>
+                <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16  }}>Cache Images</Text>
+                <Switch
+                  value={cache}
+                  onValueChange={() => {
+                    props.updateCacheOption(!cache)
+                    setCache(!cache);
+                  }}
+                />
+              </View>
+
             {/* <Text style={styles.title}>Permitted Complexities</Text>
             <View>
               <View style={styles.switch}>

@@ -11,7 +11,7 @@ import {
 import CartCard from '../Components/CartCard';
 
 // Render a list of all meals saved in the database
-const Cart = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal }) => {
+const Cart = ({cache, showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal }) => {
 
 
 
@@ -89,7 +89,7 @@ const Cart = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
 .map((mealItem, index) => (
                   <TouchableWithoutFeedback key={index}>
                     <View>
-                      <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
+                      <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem) } cache = {cache} />
                     </View>
                   </TouchableWithoutFeedback>
                 ))}

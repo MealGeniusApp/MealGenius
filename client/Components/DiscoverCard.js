@@ -1,10 +1,14 @@
 import React, { useState} from 'react';
 import { View, Image, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import RNFS from 'react-native-fs';
 
-const SwipeableCard = ({ nextMeal, swipe}) => {
+const SwipeableCard = ({ nextMeal, swipe, cache}) => {
   const [translateX] = useState(new Animated.Value(0));
   const [opacity] = useState(new Animated.Value(1));
+
+  const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
+  const image = nextMeal? `${RNFS.DocumentDirectoryPath}/${nextMeal.meal}/${nextMeal.date}.jpg`: ''
   const SWIPE_THRESH = 25
   
 
@@ -47,7 +51,6 @@ const SwipeableCard = ({ nextMeal, swipe}) => {
     // Swiped left
     else if (translateX._value < 0)
     {
-
       Animated.timing(translateX, {
         toValue: -500, // Target value
         duration: 300, // Animation duration
@@ -108,8 +111,9 @@ const SwipeableCard = ({ nextMeal, swipe}) => {
         <Text style={styles.title}>{nextMeal?.title}</Text>
         <View style={styles.imagecontainer}>
           <Image
-            source={{ uri: nextMeal?.image? nextMeal.image: 'https://static.vecteezy.com/system/resources/previews/005/337/799/original/icon-image-not-found-free-vector.jpg' }}
+            source={!failedToLoad? (nextMeal?.image? {uri: cache? (RNFS.exists(image)? image: nextMeal.image): nextMeal.image} : require('../assets/notfound.jpg')): require('../assets/notfound.jpg')}
             style={styles.image}
+            onError={() => setFailedToLoad(true)}
           />
         </View>
         

@@ -6,6 +6,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react'
+import RNFS from 'react-native-fs';
+
 
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Import the pref constants
 
@@ -19,10 +21,9 @@ const DEMO_URL = "https://youtu.be/udKK51jYs7M"
 const APPL_API = "appl_iymEcrjJXGyUyYLMNqGXZYiaKvP"
 const GOOG_API = "goog_NxhhAZhHJkJSHDfsFAPtYIyEClP"
 
-
-let defaultBreakfast = [{"title":"French Toast\n","description":"Thick slices of bread soaked in a sweet eggy mixture, lightly fried until golden brown, and served with maple syrup.","meal":"breakfast","image":"https://sugarspunrun.com/wp-content/uploads/2023/08/French-Toast-recipe-1-of-1.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121001954477"},{"title":"Blueberry Yogurt Parfait ","description":"Layers of creamy yogurt, crunchy granola, and sweet blueberries create a delightful morning treat bursting with flavor and texture.","meal":"breakfast","image":"https://beamingbaker.com/wp-content/uploads/2022/07/IGT-blueberry-yogurt-parfait-blueberry-parfait-5.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002003429"},{"title":"Bacon and Egg Burrito ","description":"A tantalizing combination of crispy bacon, scrambled eggs, and melted cheese, all wrapped in a warm tortilla. A breakfast favorite.","meal":"breakfast","image":"https://peasandcrayons.com/wp-content/uploads/2020/03/bacon-breakfast-burrito-recipe-.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002010072"},{"title":"Breakfast Burrito ","description":"A hearty and flavorful Mexican-inspired breakfast filled with scrambled eggs, cheese, black beans, and salsa wrapped in a warm tortilla.","meal":"breakfast","image":"https://hips.hearstapps.com/hmg-prod/images/delish-breakfast-burrito-horizontaljpg-1541624805.jpg?crop=0.8889743589743591xw:1xh;center,top&resize=1200:*","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002016212"},{"title":"Breakfast Sandwich ","description":"A hearty combination of fluffy scrambled eggs, crispy bacon, melted cheese, and tangy tomato sauce sandwiched between buttery toasted bread.","meal":"breakfast","image":"https://www.twopeasandtheirpod.com/wp-content/uploads/2023/06/Breakfast-Sandwich-0015.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002023972"},{"title":"Bacon and Cheese Frittata ","description":"A delightful combination of fluffy eggs, crispy bacon, and melty cheese, baked to perfection for a satisfying breakfast.","meal":"breakfast","image":"https://www.allrecipes.com/thmb/suo78_q5T1jGL0ZGXtWd8EeykvA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/222584-bacon-cheese-frittata-4x3-0775-577af3bbcf8047b193c5ee69d366c3ce.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002029584"},{"title":"Cinnamon Roll","description":"Soft and fluffy cinnamon roll drizzled with a sweet glaze, perfect for a cozy and indulgent breakfast treat.","meal":"breakfast","image":"https://www.allrecipes.com/thmb/SXBA_9EaVs0Q5anMwXtGIJ4g6kQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/cinnamon_rolls_editedcinnmon_roll_TT_421-9a9e8182d542469e84d6aa0e75cf9fd3.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002034761"},{"title":"Lox Bagel","description":"A toasty bagel topped with smoked salmon, cream cheese, red onion, capers, and fresh dill for a savory breakfast delight.","meal":"breakfast","image":"https://tastesbetterfromscratch.com/wp-content/uploads/2022/07/Lox-Bagel-1.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121004149882"}]
-let defaultLunch = [{"title":"Salmon Teriyaki","description":"Succulent salmon fillet glazed with a tangy teriyaki sauce, perfectly grilled to achieve a delightful caramelized texture. Served with steamed jasmine rice and fresh stir-fried vegetables.","meal":"lunch","image":"https://natashaskitchen.com/wp-content/uploads/2016/01/Teriyaki-Salmon-Recipe-4.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121001948760"},{"title":"Chicken Shawarma","description":"Succulent marinated chicken grilled to perfection, served with warm pita bread, tangy garlic sauce, and refreshing crisp vegetables.","meal":"lunch","image":"https://feelgoodfoodie.net/wp-content/uploads/2023/09/Chicken-Shawarma-TIMG.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121001954538"},{"title":"Margherita Pizza ","description":"A classic Italian thin-crust pizza topped with tangy tomato sauce, fresh mozzarella cheese, and fragrant basil leaves.","meal":"lunch","image":"https://images.prismic.io/eataly-us/ed3fcec7-7994-426d-a5e4-a24be5a95afd_pizza-recipe-main.jpg?auto=compress,format","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003339290"},{"title":"Beef Stir-Fry","description":"Tender strips of beef tossed with colorful vegetables in a savory soy sauce, served over a bed of fluffy white rice.","meal":"lunch","image":"https://www.wellplated.com/wp-content/uploads/2020/05/Beef-Stir-Fry.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003344817"},{"title":"Turkey Club Sandwich ","description":"A classic combination of sliced turkey, crispy bacon, lettuce, tomato, and mayo on toasted bread for a satisfying lunch.","meal":"lunch","image":"https://dinnersdishesanddesserts.com/wp-content/uploads/2022/03/Turkey-Club-Sandwich-square-scaled-735x735.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003350976"},{"title":"Vegetable Pad Thai ","description":"A tantalizing blend of rice noodles, colorful veggies, and a tangy peanut sauce, topped with crushed peanuts for added crunch.","meal":"lunch","image":"https://pinchofyum.com/wp-content/uploads/Vegetarian-Pad-Thai-Recipe.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003402018"},{"title":"BBQ Pulled Pork Sandwich ","description":"Tender pulled pork smothered in tangy barbecue sauce, served on a toasted brioche bun with a side of crispy coleslaw.","meal":"lunch","image":"https://www.melskitchencafe.com/wp-content/uploads/2010/08/bbq-pork-sandwich4-600x900.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003408445"},{"title":"Spicy Tofu Tacos ","description":"Crispy corn tortillas filled with flavorful tofu, topped with tangy slaw, avocado, and drizzled with spicy chipotle sauce.","meal":"lunch","image":"https://thetoastedpinenut.com/wp-content/uploads/2019/06/Spicy-Vegetarian-Tofu-Tacos-6.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003416667"}]
-let defaultDinner = [{"title":"Spicy Beef Stir-Fry","description":"Tender slices of beef sautéed with vibrant vegetables in a fiery sauce, served over fragrant steamed jasmine rice.","meal":"dinner","image":"https://omnivorescookbook.com/wp-content/uploads/2015/03/1502_Spicy-Beef-Stir-Fry-with-Pepper_005.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002213415"},{"title":"Mushroom and Goat Cheese Risotto","description":"Creamy risotto cooked with flavorful mushrooms and tangy goat cheese, topped with a sprinkle of fresh herbs.","meal":"dinner","image":"https://realfood.tesco.com/media/images/RFO-LargeHero-1400x919-MushroomRisotto-1f42b142-3efb-4b64-85e7-984aa6f7b156-0-1400x919.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003342366"},{"title":"Cajun Shrimp Pasta","description":"A spicy and flavorful dish featuring succulent shrimp smothered in a creamy Cajun sauce, served over al dente pasta.","meal":"dinner","image":"https://sugarspunrun.com/wp-content/uploads/2023/02/Cajun-Shrimp-Pasta-Recipe-1-of-1.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003348464"},{"title":"Beef and Broccoli Stir-Fry ","description":"Tender slices of beef sautéed with crisp broccoli florets in a savory ginger-soy sauce. Served over steamed white rice.","meal":"dinner","image":"https://www.dinneratthezoo.com/wp-content/uploads/2017/10/beef-and-broccoli-stir-fry-14.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003354953"},{"title":"Shrimp Scampi","description":"Succulent shrimp tossed in garlic butter and white wine sauce, served over a bed of linguine pasta.","meal":"dinner","image":"https://www.themediterraneandish.com/wp-content/uploads/2021/08/shrimp-scampi-recipe-5.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003400037"},{"title":"Spaghetti Bolognese","description":"Classic Italian dish with hearty tomato sauce, ground beef, and aromatic herbs served over al dente spaghetti.","meal":"dinner","image":"https://www.recipetineats.com/wp-content/uploads/2018/07/Spaghetti-Bolognese.jpg?w=500&h=500&crop=1","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003841015"},{"title":"Chicken Parmesan","description":"Crispy breaded chicken breasts topped with marinara sauce and melted mozzarella cheese, served over a bed of spaghetti.","meal":"dinner","image":"https://tastesbetterfromscratch.com/wp-content/uploads/2023/03/Chicken-Parmesan-1.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003846483"},{"title":"Pesto Pasta with Grilled Vegetables","description":"A comforting plate of al dente pasta coated in homemade basil pesto, topped with grilled seasonal vegetables for a burst of freshness.","meal":"dinner","image":"https://www.eatingwell.com/thmb/dGjxmiAtCVBhijKL1lgJpZGcY-w=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8115128-34bc7be43d6746fcb0c05dbe9cbdbf95.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003853857"}]
+//let defaultBreakfast = [{"title":"French Toast\n","description":"Thick slices of bread soaked in a sweet eggy mixture, lightly fried until golden brown, and served with maple syrup.","meal":"breakfast","image":"https://sugarspunrun.com/wp-content/uploads/2023/08/French-Toast-recipe-1-of-1.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121001954477"},{"title":"Blueberry Yogurt Parfait ","description":"Layers of creamy yogurt, crunchy granola, and sweet blueberries create a delightful morning treat bursting with flavor and texture.","meal":"breakfast","image":"https://beamingbaker.com/wp-content/uploads/2022/07/IGT-blueberry-yogurt-parfait-blueberry-parfait-5.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002003429"},{"title":"Bacon and Egg Burrito ","description":"A tantalizing combination of crispy bacon, scrambled eggs, and melted cheese, all wrapped in a warm tortilla. A breakfast favorite.","meal":"breakfast","image":"https://peasandcrayons.com/wp-content/uploads/2020/03/bacon-breakfast-burrito-recipe-.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002010072"},{"title":"Breakfast Burrito ","description":"A hearty and flavorful Mexican-inspired breakfast filled with scrambled eggs, cheese, black beans, and salsa wrapped in a warm tortilla.","meal":"breakfast","image":"https://hips.hearstapps.com/hmg-prod/images/delish-breakfast-burrito-horizontaljpg-1541624805.jpg?crop=0.8889743589743591xw:1xh;center,top&resize=1200:*","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002016212"},{"title":"Breakfast Sandwich ","description":"A hearty combination of fluffy scrambled eggs, crispy bacon, melted cheese, and tangy tomato sauce sandwiched between buttery toasted bread.","meal":"breakfast","image":"https://www.twopeasandtheirpod.com/wp-content/uploads/2023/06/Breakfast-Sandwich-0015.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002023972"},{"title":"Bacon and Cheese Frittata ","description":"A delightful combination of fluffy eggs, crispy bacon, and melty cheese, baked to perfection for a satisfying breakfast.","meal":"breakfast","image":"https://www.allrecipes.com/thmb/suo78_q5T1jGL0ZGXtWd8EeykvA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/222584-bacon-cheese-frittata-4x3-0775-577af3bbcf8047b193c5ee69d366c3ce.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002029584"},{"title":"Cinnamon Roll","description":"Soft and fluffy cinnamon roll drizzled with a sweet glaze, perfect for a cozy and indulgent breakfast treat.","meal":"breakfast","image":"https://www.allrecipes.com/thmb/SXBA_9EaVs0Q5anMwXtGIJ4g6kQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/cinnamon_rolls_editedcinnmon_roll_TT_421-9a9e8182d542469e84d6aa0e75cf9fd3.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002034761"},{"title":"Lox Bagel","description":"A toasty bagel topped with smoked salmon, cream cheese, red onion, capers, and fresh dill for a savory breakfast delight.","meal":"breakfast","image":"https://tastesbetterfromscratch.com/wp-content/uploads/2022/07/Lox-Bagel-1.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121004149882"}]
+//let defaultLunch = [{"title":"Salmon Teriyaki","description":"Succulent salmon fillet glazed with a tangy teriyaki sauce, perfectly grilled to achieve a delightful caramelized texture. Served with steamed jasmine rice and fresh stir-fried vegetables.","meal":"lunch","image":"https://natashaskitchen.com/wp-content/uploads/2016/01/Teriyaki-Salmon-Recipe-4.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121001948760"},{"title":"Chicken Shawarma","description":"Succulent marinated chicken grilled to perfection, served with warm pita bread, tangy garlic sauce, and refreshing crisp vegetables.","meal":"lunch","image":"https://feelgoodfoodie.net/wp-content/uploads/2023/09/Chicken-Shawarma-TIMG.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121001954538"},{"title":"Margherita Pizza ","description":"A classic Italian thin-crust pizza topped with tangy tomato sauce, fresh mozzarella cheese, and fragrant basil leaves.","meal":"lunch","image":"https://images.prismic.io/eataly-us/ed3fcec7-7994-426d-a5e4-a24be5a95afd_pizza-recipe-main.jpg?auto=compress,format","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003339290"},{"title":"Beef Stir-Fry","description":"Tender strips of beef tossed with colorful vegetables in a savory soy sauce, served over a bed of fluffy white rice.","meal":"lunch","image":"https://www.wellplated.com/wp-content/uploads/2020/05/Beef-Stir-Fry.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003344817"},{"title":"Turkey Club Sandwich ","description":"A classic combination of sliced turkey, crispy bacon, lettuce, tomato, and mayo on toasted bread for a satisfying lunch.","meal":"lunch","image":"https://dinnersdishesanddesserts.com/wp-content/uploads/2022/03/Turkey-Club-Sandwich-square-scaled-735x735.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003350976"},{"title":"Vegetable Pad Thai ","description":"A tantalizing blend of rice noodles, colorful veggies, and a tangy peanut sauce, topped with crushed peanuts for added crunch.","meal":"lunch","image":"https://pinchofyum.com/wp-content/uploads/Vegetarian-Pad-Thai-Recipe.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003402018"},{"title":"BBQ Pulled Pork Sandwich ","description":"Tender pulled pork smothered in tangy barbecue sauce, served on a toasted brioche bun with a side of crispy coleslaw.","meal":"lunch","image":"https://www.melskitchencafe.com/wp-content/uploads/2010/08/bbq-pork-sandwich4-600x900.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003408445"},{"title":"Spicy Tofu Tacos ","description":"Crispy corn tortillas filled with flavorful tofu, topped with tangy slaw, avocado, and drizzled with spicy chipotle sauce.","meal":"lunch","image":"https://thetoastedpinenut.com/wp-content/uploads/2019/06/Spicy-Vegetarian-Tofu-Tacos-6.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003416667"}]
+//let defaultDinner = [{"title":"Spicy Beef Stir-Fry","description":"Tender slices of beef sautéed with vibrant vegetables in a fiery sauce, served over fragrant steamed jasmine rice.","meal":"dinner","image":"https://omnivorescookbook.com/wp-content/uploads/2015/03/1502_Spicy-Beef-Stir-Fry-with-Pepper_005.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121002213415"},{"title":"Mushroom and Goat Cheese Risotto","description":"Creamy risotto cooked with flavorful mushrooms and tangy goat cheese, topped with a sprinkle of fresh herbs.","meal":"dinner","image":"https://realfood.tesco.com/media/images/RFO-LargeHero-1400x919-MushroomRisotto-1f42b142-3efb-4b64-85e7-984aa6f7b156-0-1400x919.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003342366"},{"title":"Cajun Shrimp Pasta","description":"A spicy and flavorful dish featuring succulent shrimp smothered in a creamy Cajun sauce, served over al dente pasta.","meal":"dinner","image":"https://sugarspunrun.com/wp-content/uploads/2023/02/Cajun-Shrimp-Pasta-Recipe-1-of-1.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003348464"},{"title":"Beef and Broccoli Stir-Fry ","description":"Tender slices of beef sautéed with crisp broccoli florets in a savory ginger-soy sauce. Served over steamed white rice.","meal":"dinner","image":"https://www.dinneratthezoo.com/wp-content/uploads/2017/10/beef-and-broccoli-stir-fry-14.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003354953"},{"title":"Shrimp Scampi","description":"Succulent shrimp tossed in garlic butter and white wine sauce, served over a bed of linguine pasta.","meal":"dinner","image":"https://www.themediterraneandish.com/wp-content/uploads/2021/08/shrimp-scampi-recipe-5.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003400037"},{"title":"Spaghetti Bolognese","description":"Classic Italian dish with hearty tomato sauce, ground beef, and aromatic herbs served over al dente spaghetti.","meal":"dinner","image":"https://www.recipetineats.com/wp-content/uploads/2018/07/Spaghetti-Bolognese.jpg?w=500&h=500&crop=1","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003841015"},{"title":"Chicken Parmesan","description":"Crispy breaded chicken breasts topped with marinara sauce and melted mozzarella cheese, served over a bed of spaghetti.","meal":"dinner","image":"https://tastesbetterfromscratch.com/wp-content/uploads/2023/03/Chicken-Parmesan-1.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003846483"},{"title":"Pesto Pasta with Grilled Vegetables","description":"A comforting plate of al dente pasta coated in homemade basil pesto, topped with grilled seasonal vegetables for a burst of freshness.","meal":"dinner","image":"https://www.eatingwell.com/thmb/dGjxmiAtCVBhijKL1lgJpZGcY-w=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/8115128-34bc7be43d6746fcb0c05dbe9cbdbf95.jpg","ingredients":"","instructions":"","nutrition":"","cart":false,"date":"20231121003853857"}]
 let breakfastQueue = []
 let lunchQueue = []
 let dinnerQueue = []
@@ -30,6 +31,17 @@ let dinnerQueue = []
 let breakfastToGenerate = 0
 let lunchToGenerate = 0
 let dinnerToGenerate = 0
+
+// Local file system paths (caching images)
+const breakfastPath = RNFS.DocumentDirectoryPath + '/breakfast';
+const lunchPath = RNFS.DocumentDirectoryPath + '/lunch';
+const dinnerPath = RNFS.DocumentDirectoryPath + '/dinner';
+const savedPath = RNFS.DocumentDirectoryPath + '/saved';
+const savedBreakfastPath = savedPath + '/breakfast';
+const savedLunchPath = savedPath + '/lunch';
+const savedDinnerPath = savedPath + '/dinner'
+
+const MAX_SAVED_IMGS = 100 // Maximum number of downloaded image for each meal.
 
 // The size of the queue when printing will not exceed 10. What happens, is extra food is generated, because some generations over dominate the update of the queue for others. So a food generation will sometimes fail to update the state, causing an extra generation
 export default function App() {
@@ -49,6 +61,7 @@ export default function App() {
   const [userId, setUserId] = useState()
   const [meals, setMeals] = useState()
   const [requests, setRequests] = useState('')
+  const [cache, setCache] = useState(true)
 
   const [nextMeal, setNextMeal] = useState('')
   const [search, setSearch] = useState('') // For list and cart tab
@@ -66,6 +79,38 @@ export default function App() {
 
   const [isModalVisible, setModalVisible] = useState(false)
   const MIN_QUEUE_SIZE = 8
+
+  useEffect(() => {
+    // Entry point of the app. Make folders here
+    async function setupFiles() {
+      await checkAndCreateFolder(breakfastPath)
+      await checkAndCreateFolder(lunchPath)
+      await checkAndCreateFolder(dinnerPath)
+
+      // Make files for saved images
+      await checkAndCreateFolder(savedPath)
+
+      await checkAndCreateFolder(savedBreakfastPath)
+      await checkAndCreateFolder(savedLunchPath)
+      await checkAndCreateFolder(savedDinnerPath)
+    }
+
+    setupFiles() // create
+    
+  }, [])
+
+  // Setup meal folder
+  const checkAndCreateFolder = async (folderPath) => {
+    try {
+      const folderExists = await RNFS.exists(folderPath);
+      if (!folderExists) {
+        await RNFS.mkdir(folderPath);
+        console.log('Folder created successfully!');
+      }
+    } catch (error) {
+      console.error('Error checking or creating folder:', error);
+    }
+  };
 
 
   // SEARCHING: Toggle the search bar
@@ -113,15 +158,18 @@ export default function App() {
     }
   }, [authenticated])
 
+  
 
-  useEffect(() =>
+  useEffect( () =>
   {
     AsyncStorage.getItem('token').then(value => {
       // If we are logged in, set auth to true to show the app and init
+      
       if (value)
       {
         logIn(value)
       }
+
       setPreInit(false)
     })
 
@@ -266,9 +314,9 @@ export default function App() {
       // Load queues up given history.
     AsyncStorage.getItem('breakfast_queue').then(value => {
       let q = JSON.parse(value)
-      if (q)
-      {
-        if (q?.length >= MIN_QUEUE_SIZE - 1)
+      // if (q)
+      // {
+      if (q?.length >= MIN_QUEUE_SIZE - 1)
       {
         
         // We have saved data, load it!
@@ -282,28 +330,28 @@ export default function App() {
       else
       {
         if (q)
-          breakfastQueue = q
-        scheduleMeal('breakfast', (MIN_QUEUE_SIZE - (q? q.length: 0)), requests)
+          breakfastQueue = q // Load up values if any are present
+        scheduleMeal('breakfast', (MIN_QUEUE_SIZE - (q? q.length: 0)), requests) // generate the remaining
       }
       
       setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
         
-      }
+      // Instead of the below, generate new stuff. This is better, even though it takes longer. It's just once.
+      // Downloads all images, uses latest AI and UI
 
-      else // load default breakfast
-      {
-        breakfastQueue = defaultBreakfast
-        AsyncStorage.setItem('breakfast_queue', JSON.stringify(breakfastQueue))
-        setBreakfastLoaded(true)
-        setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
-      }
+      // else // load default breakfast
+      // {
+      //   breakfastQueue = defaultBreakfast
+      //   AsyncStorage.setItem('breakfast_queue', JSON.stringify(breakfastQueue))
+      //   setBreakfastLoaded(true)
+      //   setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
+      // }
       
     });
 
     AsyncStorage.getItem('lunch_queue').then(value => {
       let q = JSON.parse(value)
-      if (q)
-      {
+
         if (q?.length >= MIN_QUEUE_SIZE - 1)
         // We have saved data, load it!
         {
@@ -323,14 +371,7 @@ export default function App() {
         
       setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
         
-      }
-      else // load default breakfast
-      {
-        lunchQueue = defaultLunch
-        AsyncStorage.setItem('lunch_queue', JSON.stringify(lunchQueue))
-        setLunchLoaded(true)
-        setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
-      }
+
       
     });
 
@@ -338,8 +379,7 @@ export default function App() {
 
     AsyncStorage.getItem('dinner_queue').then(value => {
       let q = JSON.parse(value)
-      if (q)
-      {
+ 
         if (q?.length >= MIN_QUEUE_SIZE - 1)
         // We have saved data, load it!
         {
@@ -360,14 +400,7 @@ export default function App() {
       // Update load progress
       setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
         
-      }
-      else // load default breakfast
-      {
-        dinnerQueue = defaultDinner
-        AsyncStorage.setItem('dinner_queue', JSON.stringify(dinnerQueue))
-        setDinnerLoaded(true)
-        setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
-      }
+     
       
     });
     }
@@ -375,6 +408,66 @@ export default function App() {
   
 
   }, [authenticated])
+
+  /**
+   * Download the image for faster loading
+   * @param {String} uri 
+   * @param {String} path
+   */
+  const downloadImage =  (uri, path) => {
+    try {
+      RNFS.downloadFile({
+        fromUrl: uri,
+        toFile: path,
+      });
+      
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    }
+  };
+  
+  // Function to maintain the image storage
+  
+  
+  const downloadAndMaintainImages = async (item, saved) => {
+    // Download image for the item
+    const path = `${RNFS.DocumentDirectoryPath}/${saved? 'saved/': ''}${item.meal}`
+    const imagePath = `${path}/${item.date}.jpg`; 
+
+    downloadImage(item.image, imagePath);
+
+    // Count the items
+    const contents = await RNFS.readdir(path);
+    const numberOfItems = contents.length;
+  
+    // Check if we exceed the maximum allowed images
+    if (numberOfItems > (saved? MAX_SAVED_IMGS : MIN_QUEUE_SIZE)) {
+
+      // Get the filename of the earliest (oldest) image
+      let oldestItem = null;
+      let oldestItemTime = Number.MAX_SAFE_INTEGER;
+
+      for (const im of contents) {
+        const itemPath = `${path}/${im}`;
+        const stats = await RNFS.stat(itemPath);
+        const itemTime = stats.ctime.getTime(); // Get creation time in milliseconds
+
+        if (itemTime < oldestItemTime) {
+          oldestItem = im;
+          oldestItemTime = itemTime;
+        }
+      }
+      
+      // Delete the earliest image file
+      RNFS.unlink(`${path}/${oldestItem}`)
+        .then(() => {
+          console.log('Deleted oldest image:', oldestItem);
+        })
+        .catch((error) => {
+          console.error('Error deleting oldest image:', error);
+        });
+    }
+  };
 
   // Hide / show the help modal
   const showHelpModal = () => {
@@ -385,6 +478,13 @@ export default function App() {
     setModalVisible(false);
   };
 
+  // Update value of cache from prefs page
+  function updateCacheOption(should)
+  {
+    setCache(should)
+    // store locally so we remember when we re initialize the app
+    AsyncStorage.setItem('cache', should+'')
+  }
 
   // Update special requests through preferences page
   function updateRequests(req_in, refresh)
@@ -506,6 +606,19 @@ export default function App() {
     setInit(false)
 
     console.log('initializing')
+
+    AsyncStorage.getItem('cache').then(value => {
+      if (value)
+      {
+        setCache(value === "true")
+      }
+      // Default to true
+      else{
+        setCache(true)
+        AsyncStorage.setItem('cache', "true")
+      }
+    })
+    
 
     // Load user data from DB
     AsyncStorage.getItem('token').then(value => {
@@ -694,6 +807,9 @@ function changeMeal(newMeal)
       ...prevMeals,
       [meal.meal]: [...prevMeals[meal.meal], meal],
     }));
+
+    // Download the image
+    downloadAndMaintainImages(meal, true) // store it for longer with true param, because we saved it.
     
 
     // Now get the ingredients and instructions
@@ -818,84 +934,86 @@ async function generateMeal(meal, req_in)
     let description = response.data.description
     let title = response.data.title
     let image = response.data.image
+    
 
     const currentDate = new Date();
     const uniqueString = currentDate.toISOString().replace(/[-T:.Z]/g, '');
 
 
     newMeal = {title: title, description: description, meal: meal, image: image, ingredients: '', instructions: '', nutrition: '', cart: false, date: uniqueString}
-          // Debug print for the generated food title
-          console.log(title)
+    // Save the image locally to load it quicker
+    // param 'saved' is false because it's only necessary for the queue
+    downloadAndMaintainImages(newMeal, false)
+    // Debug print for the generated food title
+    console.log(title)
 
-          
+    if (meal === 'breakfast')
+    {
+      breakfastQueue.push(newMeal)
+      breakfastToGenerate--
+      AsyncStorage.setItem('breakfast_queue', JSON.stringify(breakfastQueue))
 
-          if (meal === 'breakfast')
-          {
-            breakfastQueue.push(newMeal)
-            breakfastToGenerate--
-            AsyncStorage.setItem('breakfast_queue', JSON.stringify(breakfastQueue))
+      // Load next meal if queue is not empty
+      if (breakfastToGenerate > 0)
+      {
+        generateMeal('breakfast', req)
+      }
+      else
+      {
+        setBreakfastLoaded(true)
+      }
+    }
 
-            // Load next meal if queue is not empty
-            if (breakfastToGenerate > 0)
-            {
-              generateMeal('breakfast', req)
-            }
-            else
-            {
-              setBreakfastLoaded(true)
-            }
-          }
-
-          else if (meal === 'lunch')
-          {
-            lunchQueue.push(newMeal)
-            lunchToGenerate--
-            AsyncStorage.setItem('lunch_queue', JSON.stringify(lunchQueue))
+    else if (meal === 'lunch')
+    {
+      lunchQueue.push(newMeal)
+      lunchToGenerate--
+      AsyncStorage.setItem('lunch_queue', JSON.stringify(lunchQueue))
 
 
 
-            // Load next meal if queue is not empty
-            if (lunchToGenerate > 0)
-            {
-              generateMeal('lunch', req)
-            }
-            // If lunch just has not yet loaded, it has been loaded now
-            else
-            {
-              // Will check if all food types are loaded and if so sets loading to false through useEffect
-              setLunchLoaded(true)
-            }
-          }
-          else if (meal === 'dinner')
-          {
+      // Load next meal if queue is not empty
+      if (lunchToGenerate > 0)
+      {
+        generateMeal('lunch', req)
+      }
+      // If lunch just has not yet loaded, it has been loaded now
+      else
+      {
+        // Will check if all food types are loaded and if so sets loading to false through useEffect
+        setLunchLoaded(true)
+      }
+    }
+    else if (meal === 'dinner')
+    {
 
-            dinnerQueue.push(newMeal)
-            dinnerToGenerate--
-            AsyncStorage.setItem('dinner_queue', JSON.stringify(dinnerQueue))
+      dinnerQueue.push(newMeal)
+      dinnerToGenerate--
+      AsyncStorage.setItem('dinner_queue', JSON.stringify(dinnerQueue))
 
-            // Load next meal if queue is not empty
-            if (dinnerToGenerate > 0)
-            {
-              generateMeal('dinner', req)
-            }
+      // Load next meal if queue is not empty
+      if (dinnerToGenerate > 0)
+      {
+        generateMeal('dinner', req)
+      }
 
-            // If dinner just has not yet loaded, check if it is now loaded
-            else
-            {
-              // Will check if all food types are loaded and if so sets loading to false through useEffect
-              setDinnerLoaded(true)
-            }
-          }
+      // If dinner just has not yet loaded, check if it is now loaded
+      else
+      {
+        // Will check if all food types are loaded and if so sets loading to false through useEffect
+        setDinnerLoaded(true)
+      }
+    }
 
-          if (breakfastToGenerate + lunchToGenerate + dinnerToGenerate == 0 && loading)
-          {
-            setLoading(false)
-          }
-        
-          // Update loading progress
-          setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
-        
-      
+    if (breakfastToGenerate + lunchToGenerate + dinnerToGenerate == 0 && loading)
+    {
+      setLoading(false)
+    }
+  
+    // Update loading progress
+    setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
+  
+
 
   })
   .catch(error => {
@@ -909,7 +1027,7 @@ async function generateMeal(meal, req_in)
   {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Navigation showSearch = {showSearch} updateSearch = {updateSearch} toggleSearch = {toggleSearch} search = {search} help = {showHelpModal} requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+          <Navigation updateCacheOption = {updateCacheOption} cache = {cache} showSearch = {showSearch} updateSearch = {updateSearch} toggleSearch = {toggleSearch} search = {search} help = {showHelpModal} requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
           
           {/* Help Modal */}
           

@@ -1,7 +1,12 @@
-import React, {useEffect, useState} from 'react';
-import { Platform, View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
-const CartCard = ({ meal, onPress, onLongPress }) => {
+import { Platform, View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import RNFS from 'react-native-fs';
+
+const CartCard = ({ meal, onPress, onLongPress, cache }) => {
+  // For image display, new cached version
+  const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
+  const image = `${RNFS.DocumentDirectoryPath}/saved/${meal.meal}/${meal.date}.jpg`
 
   const [selected, setSelected] = useState(false)
   const [finished, setFinished] = useState([])
@@ -31,7 +36,12 @@ const CartCard = ({ meal, onPress, onLongPress }) => {
       style={{ ...styles.card, height: selected? 'auto': Platform.OS === 'ios' && Platform.isPad ? 200 : 120 }}
     >
       {/* Add image on the left */}
-      {!selected && (<Image source={{ uri: meal.image }} style={styles.image} />)}
+      {!selected && (
+      <Image 
+          source={image? (!failedToLoad? (meal?.image? {uri: cache? (RNFS.exists(image)? image: meal.image): meal.image} : require('../assets/notfound.jpg')): (meal?.image? {uri: meal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
+          style={styles.image}
+          onError={() => {setFailedToLoad(true)}} 
+        />)}
 
 
 
@@ -40,7 +50,7 @@ const CartCard = ({ meal, onPress, onLongPress }) => {
         {/* Conditionally render the image in the top right corner */}
         {meal.cart && (
           <Image
-            source={{ uri: 'https://cdn1.iconfinder.com/data/icons/leto-ecommerce-shopping-1/64/checkout_cart_shopping_shop-1024.png' }}
+            source={ require('../assets/cart.png')}
             style={styles.cartImage}
           />
         )}
@@ -59,7 +69,7 @@ const CartCard = ({ meal, onPress, onLongPress }) => {
             meal.instructions.trim() === '' ? (
               <View style={styles.tokenContainer}>
                 <Text style={styles.loadtext}>Generating awesomeness, hang tight</Text>
-                <Image source={{ uri: 'https://i.gifer.com/4V0b.gif' }} style={styles.loadimage} />
+                <Image source={require('../assets/load.gif')} style={styles.loadimage} />
               </View>
             ) :
             meal.ingredients.split('\n').map((ingredient, index) => (

@@ -13,7 +13,7 @@ const Discover = (props) => {
           return (
               <View>
               <View style={styles.container}>
-                  <DiscoverCard nextMeal = {props.nextMeal} swipe = {props.swipe}/>
+                  <DiscoverCard nextMeal = {props.nextMeal} swipe = {props.swipe} cache = {props.cache}/>
               </View>
               </View>
           

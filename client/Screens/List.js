@@ -15,12 +15,18 @@ import {
   Alert
 } from 'react-native';
 import ListCard from '../Components/ListCard';
+import RNFS from 'react-native-fs';
 
 // Render a list of all meals saved in the database
-const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal }) => {
+const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal, cache }) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [activeTab, setActiveTab] = useState('Ingredients');
+
+  // Cached image state
+  const [image, setImage] = useState('')
+  const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
+  
 
   // Executes when we get ingredient updates
   useEffect(() => {
@@ -38,8 +44,11 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
 
   const onPress = (meal) => {
     setActiveTab('Ingredients')
+    setFailedToLoad(false)
     setSelectedMeal(meal);
     
+    setImage(`${RNFS.DocumentDirectoryPath}/saved/${meal.meal}/${meal.date}.jpg`)
+
     setModalVisible(true);
   };
 
@@ -121,7 +130,7 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
                 {meals[meal].filter(mealItem => mealItem.title.toLowerCase().includes(search.toLowerCase())).map((mealItem, index) => (
                   <TouchableWithoutFeedback key={index}>
                     <View>
-                      <ListCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
+                      <ListCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} cache = {cache}/>
                     </View>
                   </TouchableWithoutFeedback>
                 ))}
@@ -162,7 +171,10 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
             </View>
 
             {/* Image */}
-            <Image source={{ uri: selectedMeal?.image }} style={styles.image} />
+            <Image 
+              source={image? (!failedToLoad? (selectedMeal?.image? {uri: cache? (RNFS.exists(image)? image: selectedMeal.image): selectedMeal.image} : require('../assets/notfound.jpg')): (selectedMeal?.image? {uri: selectedMeal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
+              style={styles.image}
+              onError={() => {setFailedToLoad(true)}} />
 
             {/* Tab Buttons */}
             {selectedMeal?.instructions.trim() !== '' && (
