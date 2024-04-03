@@ -15,7 +15,7 @@ import {
   Alert
 } from 'react-native';
 import ListCard from '../Components/ListCard';
-import RNFS from 'react-native-fs';
+import RNFetchBlob from 'rn-fetch-blob';
 
 // Render a list of all meals saved in the database
 const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal, cache }) => {
@@ -47,7 +47,7 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
     setFailedToLoad(false)
     setSelectedMeal(meal);
     
-    setImage(`${RNFS.DocumentDirectoryPath}/saved/${meal.meal}/${meal.date}.jpg`)
+    setImage(`${RNFetchBlob.fs.dirs.DocumentDir}/saved/${meal.meal}/${meal.date}.jpg`)
 
     setModalVisible(true);
   };
@@ -172,7 +172,7 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
 
             {/* Image */}
             <Image 
-              source={image? (!failedToLoad? (selectedMeal?.image? {uri: cache? (RNFS.exists(image)? image: selectedMeal.image): selectedMeal.image} : require('../assets/notfound.jpg')): (selectedMeal?.image? {uri: selectedMeal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
+              source={image? (!failedToLoad? (selectedMeal?.image? {uri: cache? (RNFetchBlob.fs.exists(image)? image: selectedMeal.image): selectedMeal.image} : require('../assets/notfound.jpg')): (selectedMeal?.image? {uri: selectedMeal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
               style={styles.image}
               onError={() => {setFailedToLoad(true)}} />
 

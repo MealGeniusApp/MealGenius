@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react'
-import RNFS from 'react-native-fs';
+import RNFetchBlob from 'rn-fetch-blob';
 
 
 import { P_SPECIAL, P_FAST, P_EASY, P_MED, P_HARD } from './PrefTypes'; // Import the pref constants
@@ -33,15 +33,15 @@ let lunchToGenerate = 0
 let dinnerToGenerate = 0
 
 // Local file system paths (caching images)
-const breakfastPath = RNFS.DocumentDirectoryPath + '/breakfast';
-const lunchPath = RNFS.DocumentDirectoryPath + '/lunch';
-const dinnerPath = RNFS.DocumentDirectoryPath + '/dinner';
-const savedPath = RNFS.DocumentDirectoryPath + '/saved';
+const breakfastPath = `${RNFetchBlob.fs.dirs.DocumentDir}/breakfast`
+const lunchPath = `${RNFetchBlob.fs.dirs.DocumentDir}/lunch`
+const dinnerPath = `${RNFetchBlob.fs.dirs.DocumentDir}/dinner`
+const savedPath = `${RNFetchBlob.fs.dirs.DocumentDir}/saved`
 const savedBreakfastPath = savedPath + '/breakfast';
 const savedLunchPath = savedPath + '/lunch';
 const savedDinnerPath = savedPath + '/dinner'
 
-const MAX_SAVED_IMGS = 100 // Maximum number of downloaded image for each meal.
+const MAX_SAVED_IMGS = 50 // Maximum number of downloaded image for each meal.
 
 // The size of the queue when printing will not exceed 10. What happens, is extra food is generated, because some generations over dominate the update of the queue for others. So a food generation will sometimes fail to update the state, causing an extra generation
 export default function App() {
@@ -102,9 +102,9 @@ export default function App() {
   // Setup meal folder
   const checkAndCreateFolder = async (folderPath) => {
     try {
-      const folderExists = await RNFS.exists(folderPath);
+      const folderExists = await RNFetchBlob.fs.isDir(folderPath);
       if (!folderExists) {
-        await RNFS.mkdir(folderPath);
+        await RNFetchBlob.fs.mkdir(folderPath);
         console.log('Folder created successfully!');
       }
     } catch (error) {
@@ -314,8 +314,6 @@ export default function App() {
       // Load queues up given history.
     AsyncStorage.getItem('breakfast_queue').then(value => {
       let q = JSON.parse(value)
-      // if (q)
-      // {
       if (q?.length >= MIN_QUEUE_SIZE - 1)
       {
         
@@ -336,16 +334,7 @@ export default function App() {
       
       setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
         
-      // Instead of the below, generate new stuff. This is better, even though it takes longer. It's just once.
-      // Downloads all images, uses latest AI and UI
-
-      // else // load default breakfast
-      // {
-      //   breakfastQueue = defaultBreakfast
-      //   AsyncStorage.setItem('breakfast_queue', JSON.stringify(breakfastQueue))
-      //   setBreakfastLoaded(true)
-      //   setProgress((breakfastQueue.length + lunchQueue.length + dinnerQueue.length) / (3 * MIN_QUEUE_SIZE))
-      // }
+      
       
     });
 
@@ -414,58 +403,54 @@ export default function App() {
    * @param {String} uri 
    * @param {String} path
    */
-  const downloadImage =  (uri, path) => {
+  const downloadImage =  async (uri, path) => {
     try {
-      RNFS.downloadFile({
-        fromUrl: uri,
-        toFile: path,
-      });
-      
+      await RNFetchBlob.config({
+        path: path,
+      }).fetch('GET', uri);
+      console.log('Image downloaded successfully!');
     } catch (error) {
       console.error('Error downloading image:', error);
     }
+    
   };
   
   // Function to maintain the image storage
   
   
   const downloadAndMaintainImages = async (item, saved) => {
-    // Download image for the item
-    const path = `${RNFS.DocumentDirectoryPath}/${saved? 'saved/': ''}${item.meal}`
+    // Download image for the item `${RNFetchBlob.fs.dirs.DocumentDir}/images`
+    const path = `${RNFetchBlob.fs.dirs.DocumentDir}/${saved? 'saved/': ''}${item.meal}`
     const imagePath = `${path}/${item.date}.jpg`; 
 
     downloadImage(item.image, imagePath);
 
-    // Count the items
-    const contents = await RNFS.readdir(path);
-    const numberOfItems = contents.length;
+    try {
+      // Read directory contents
+      const paths = await RNFetchBlob.fs.lstat(path);
   
-    // Check if we exceed the maximum allowed images
-    if (numberOfItems > (saved? MAX_SAVED_IMGS : MIN_QUEUE_SIZE)) {
-
-      // Get the filename of the earliest (oldest) image
-      let oldestItem = null;
-      let oldestItemTime = Number.MAX_SAFE_INTEGER;
-
-      for (const im of contents) {
-        const itemPath = `${path}/${im}`;
-        const stats = await RNFS.stat(itemPath);
-        const itemTime = stats.ctime.getTime(); // Get creation time in milliseconds
-
-        if (itemTime < oldestItemTime) {
-          oldestItem = im;
-          oldestItemTime = itemTime;
+      // Check if we exceed the maximum allowed images
+      const numberOfItems = paths.length;
+      const maxItems = saved ? MAX_SAVED_IMGS : MIN_QUEUE_SIZE;
+  
+      if (numberOfItems > maxItems) {
+        // Find the oldest image file
+        let oldestItem = null;
+        let oldestItemTime = Number.MAX_SAFE_INTEGER;
+  
+        for (const item of paths) {
+          if (item.lastModified < oldestItemTime) {
+            oldestItem = item.path;
+            oldestItemTime = item.lastModified ;
+          }
         }
+  
+        // Delete the oldest image file
+        await RNFetchBlob.fs.unlink(oldestItem);
+        console.log('Deleted oldest image:', oldestItem);
       }
-      
-      // Delete the earliest image file
-      RNFS.unlink(`${path}/${oldestItem}`)
-        .then(() => {
-          console.log('Deleted oldest image:', oldestItem);
-        })
-        .catch((error) => {
-          console.error('Error deleting oldest image:', error);
-        });
+    } catch (error) {
+      console.error('Error checking and deleting oldest image:', error);
     }
   };
 
@@ -849,6 +834,11 @@ function forgetMeal(meal)
     ...prevMeals,
     [meal.meal]: prevMeals[meal.meal].filter(item => item !== meal),
   }));
+
+  // Delete image from cache
+  let path = `${RNFetchBlob.fs.dirs.DocumentDir}/saved/${meal.meal}/${meal.date}.jpg`
+  if (RNFetchBlob.fs.exists(path))
+    RNFetchBlob.fs.unlink(path)
 }
 
 // Add the meal to the shopping cart
@@ -934,7 +924,7 @@ async function generateMeal(meal, req_in)
     let description = response.data.description
     let title = response.data.title
     let image = response.data.image
-    
+    console.log(breakfastToGenerate, lunchToGenerate, dinnerToGenerate)
 
     const currentDate = new Date();
     const uniqueString = currentDate.toISOString().replace(/[-T:.Z]/g, '');
