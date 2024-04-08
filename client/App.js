@@ -15,7 +15,8 @@ import Purchases from 'react-native-purchases';
 
 
 // Meal Genius server url
-const BASE_URL = "http://54.204.246.135:3001"
+//const BASE_URL = "http://54.204.246.135:3001"
+const BASE_URL = "https://mealgenius-bes7.onrender.com"
 // Demo video url
 const DEMO_URL = "https://youtu.be/udKK51jYs7M"
 const APPL_API = "appl_iymEcrjJXGyUyYLMNqGXZYiaKvP"
