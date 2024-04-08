@@ -42,7 +42,7 @@ const { default: mongoose } = require('mongoose');
   //const job = cron.schedule('*/30 * * * * *', maintainUsers);
   job.start()
 
- const urlToPing = `https://localhost:${process.env.PORT}/ping`;
+ const urlToPing = `https://localhost/ping`;
 const pingUrl = () => {
   axios.get(urlToPing)
     .then((res) => {
