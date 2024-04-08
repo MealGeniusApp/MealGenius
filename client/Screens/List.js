@@ -18,10 +18,12 @@ import ListCard from '../Components/ListCard';
 import RNFetchBlob from 'rn-fetch-blob';
 
 // Render a list of all meals saved in the database
-const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal, cache }) => {
+const List = ({warndels, showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal, cache }) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [activeTab, setActiveTab] = useState('Ingredients');
+  const [validImage, setValidImage] = useState(true)
+
 
   // Cached image state
   const [image, setImage] = useState('')
@@ -48,6 +50,11 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
     setSelectedMeal(meal);
     
     setImage(`${RNFetchBlob.fs.dirs.DocumentDir}/saved/${meal.meal}/${meal.date}.jpg`)
+    RNFetchBlob.fs.exists(`${RNFetchBlob.fs.dirs.DocumentDir}/saved/${meal.meal}/${meal.date}.jpg`)
+    .then((res) => {
+      setValidImage(res)
+    })
+    
 
     setModalVisible(true);
   };
@@ -69,7 +76,9 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
     // Use isOnLeftHalf as needed
     if (isOnLeftHalf)
     {
-      // Delete the item: confirm first
+      if (warndels)
+      {
+        // Delete the item
       Alert.alert(
         'Delete Meal',
         'Are you sure?\nHolding down the left-side prompts a deletion.',
@@ -79,7 +88,10 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
         ],
         { cancelable: true }
       );
-      
+      }
+      else{
+        forgetMeal(meal)
+      }
 
     }
     else
@@ -88,6 +100,7 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
       cartMeal(meal)
     }
   };
+
 
   
 
@@ -172,7 +185,7 @@ const List = ({showSearch, search, updateSearch, meals, meal, forgetMeal, cartMe
 
             {/* Image */}
             <Image 
-              source={image? (!failedToLoad? (selectedMeal?.image? {uri: cache? (RNFetchBlob.fs.exists(image)? image: selectedMeal.image): selectedMeal.image} : require('../assets/notfound.jpg')): (selectedMeal?.image? {uri: selectedMeal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
+              source={image? (!failedToLoad? (selectedMeal?.image? {uri: cache? (validImage? image: selectedMeal.image): selectedMeal.image} : require('../assets/notfound.jpg')): (selectedMeal?.image? {uri: selectedMeal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
               style={styles.image}
               onError={() => {setFailedToLoad(true)}} />
 

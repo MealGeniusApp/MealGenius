@@ -1,6 +1,6 @@
 
 import { Platform, View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect} from 'react';
 import RNFetchBlob from 'rn-fetch-blob';
 
 const CartCard = ({ meal, onPress, onLongPress, cache }) => {
@@ -10,6 +10,15 @@ const CartCard = ({ meal, onPress, onLongPress, cache }) => {
 
   const [selected, setSelected] = useState(false)
   const [finished, setFinished] = useState([])
+const [validImage, setValidImage] = useState(true)
+useEffect(() => {
+  RNFetchBlob.fs.exists(image)
+  .then((res) => {
+    setValidImage(res)
+  })
+  
+  
+}, [meal])
 
   // Select this ingredient
   function complete(ingredient)
@@ -29,6 +38,7 @@ const CartCard = ({ meal, onPress, onLongPress, cache }) => {
   }
 
 
+
   return (
     <TouchableOpacity
       onPress={() => {onPress(meal); setSelected(!selected)}}
@@ -38,7 +48,7 @@ const CartCard = ({ meal, onPress, onLongPress, cache }) => {
       {/* Add image on the left */}
       {!selected && (
       <Image 
-          source={image? (!failedToLoad? (meal?.image? {uri: cache? (RNFetchBlob.fs.exists(image)? image: meal.image): meal.image} : require('../assets/notfound.jpg')): (meal?.image? {uri: meal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
+          source={image? (!failedToLoad? (meal?.image? {uri: cache? (validImage? image: meal.image): meal.image} : require('../assets/notfound.jpg')): (meal?.image? {uri: meal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
           style={styles.image}
           onError={() => {setFailedToLoad(true)}} 
         />)}

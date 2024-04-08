@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Image, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import RNFetchBlob from 'rn-fetch-blob';
@@ -6,11 +6,21 @@ import RNFetchBlob from 'rn-fetch-blob';
 const SwipeableCard = ({ nextMeal, swipe, cache}) => {
   const [translateX] = useState(new Animated.Value(0));
   const [opacity] = useState(new Animated.Value(1));
+  const [validImage, setValidImage] = useState(true)
 
   const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
   const image = nextMeal? `${RNFetchBlob.fs.dirs.DocumentDir}/${nextMeal.meal}/${nextMeal.date}.jpg`: ''
   const SWIPE_THRESH = 25
-  
+
+  useEffect(() => {
+    RNFetchBlob.fs.exists(image)
+    .then((res) => {
+      setValidImage(res)
+    })
+    
+    
+  }, [nextMeal])
+
 
   const onGestureEvent = Animated.event(
     [{ nativeEvent: { translationX: translateX } }],
@@ -111,10 +121,10 @@ const SwipeableCard = ({ nextMeal, swipe, cache}) => {
         <Text style={styles.title}>{nextMeal?.title}</Text>
         <View style={styles.imagecontainer}>
           <Image
-            source={(nextMeal?.image? {uri: cache? (RNFetchBlob.fs.exists(image)? image: nextMeal.image): nextMeal.image} : require('../assets/notfound.jpg'))}
+            source={(nextMeal?.image? {uri: cache? (validImage? image: nextMeal.image): nextMeal.image} : require('../assets/notfound.jpg'))}
             style={styles.image}
             onError={() => setFailedToLoad(true)} // for some reason, failed to load was true and source was not using the image although it was present.
-          />
+          /> 
         </View>
         
         <Text style={styles.description}>{nextMeal?.description}</Text>

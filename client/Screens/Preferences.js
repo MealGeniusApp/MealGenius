@@ -43,7 +43,7 @@ const Preferences = (props) => {
     // To ignore the change if they didnt change any details.
     const [prevReqs, setPrevReqs] = useState(defaultReqs);
     const [cache, setCache] = useState(props.cache)
-
+    const [warndels, setWarndels] = useState(props.warndels)
 
     // const [fastMode, setFastMode] = useState(getPref(P_FAST, false));
 
@@ -226,7 +226,7 @@ const Preferences = (props) => {
             <Text style={styles.title}>Special Requests</Text>
             <TextInput
               style={{
-                height: Platform.OS === 'ios' && Platform.isPad ? 300 : 190,
+                height: Platform.OS === 'ios' && Platform.isPad ? 200 : 100,
                 borderRadius: 10,
                 borderWidth: 1,
                 borderColor: 'gray',
@@ -247,12 +247,23 @@ const Preferences = (props) => {
           ( <View>
             {/* Option for caching images */}
             <View style={styles.switch}>
-                <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16  }}>Cache Images</Text>
+                <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16  }}>Faster Images</Text>
                 <Switch
                   value={cache}
                   onValueChange={() => {
                     props.updateCacheOption(!cache)
                     setCache(!cache);
+                  }}
+                />
+              </View>
+
+              <View style={styles.switch}>
+                <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16  }}>Warn Deletions</Text>
+                <Switch
+                  value={warndels}
+                  onValueChange={() => {
+                    props.updateWarndels(!warndels)
+                    setWarndels(!warndels);
                   }}
                 />
               </View>

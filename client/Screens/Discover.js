@@ -10,14 +10,14 @@ const Discover = (props) => {
     {
       if (!props.loading)
       {
-          return (
-              <View>
-              <View style={styles.container}>
-                  <DiscoverCard nextMeal = {props.nextMeal} swipe = {props.swipe} cache = {props.cache}/>
-              </View>
-              </View>
-          
-        );
+        return (
+          <View>
+          <View style={styles.container}>
+              <DiscoverCard nextMeal = {props.nextMeal} swipe = {props.swipe} cache = {props.cache}/>
+          </View>
+          </View>
+      
+    );
       }
           // Return loading screen
       return (

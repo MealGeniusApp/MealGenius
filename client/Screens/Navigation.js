@@ -114,19 +114,19 @@ const Navigation = (props) => {
           headerTitle: () => <CustomHeader type= "Saved"/>,
         }}
 
-        children={()=><List cache = {props.cache} showSearch = {props.showSearch} search = {props.search} updateSearch = {props.updateSearch} forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
+        children={()=><List warndels = {props.warndels} cache = {props.cache} showSearch = {props.showSearch} search = {props.search} updateSearch = {props.updateSearch} forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
     
       <Tab.Screen name="Cart" options={{
           headerTitle: () => <CustomHeader type = "Shopping"/>,
         }}
 
-        children={()=><Cart cache = {props.cache} showSearch = {props.showSearch} search = {props.search} updateSearch = {props.updateSearch} forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
+        children={()=><Cart warndels = {props.warndels} cache = {props.cache} showSearch = {props.showSearch} search = {props.search} updateSearch = {props.updateSearch} forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
     
         <Tab.Screen name="Preferences" options={{
           headerTitle: () => <CustomHeader type = "Preferences"/>,
         }}
 
-        children={()=><Preferences updateCacheOption = {props.updateCacheOption} cache = {props.cache} requests = {props.requests} updateRequests= {props.updateRequests} meal = {props.mealTitle.toUpperCase()} subscribed = {props.subscribed} purchase = {props.purchase} tokens = {props.tokens} managementURL = {props.managementURL} refreshMeals = {props.refreshMeals} prefs = {props.prefs} setFastMode = {props.setFastMode} savePreferences = {props.savePreferences} clearHistory = {props.clearHistory} logout={props.logout} deleteAccount= {props.deleteAccount}/>} />
+        children={()=><Preferences updateWarndels = {props.updateWarndels} warndels = {props.warndels} updateCacheOption = {props.updateCacheOption} cache = {props.cache} requests = {props.requests} updateRequests= {props.updateRequests} meal = {props.mealTitle.toUpperCase()} subscribed = {props.subscribed} purchase = {props.purchase} tokens = {props.tokens} managementURL = {props.managementURL} refreshMeals = {props.refreshMeals} prefs = {props.prefs} setFastMode = {props.setFastMode} savePreferences = {props.savePreferences} clearHistory = {props.clearHistory} logout={props.logout} deleteAccount= {props.deleteAccount}/>} />
       </Tab.Navigator>
     </NavigationContainer>
   );

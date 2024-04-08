@@ -62,6 +62,7 @@ export default function App() {
   const [meals, setMeals] = useState()
   const [requests, setRequests] = useState('')
   const [cache, setCache] = useState(true)
+  const [warndels, setWarndels] = useState(true)
 
   const [nextMeal, setNextMeal] = useState('')
   const [search, setSearch] = useState('') // For list and cart tab
@@ -78,7 +79,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   const [isModalVisible, setModalVisible] = useState(false)
-  const MIN_QUEUE_SIZE = 8
+  const MIN_QUEUE_SIZE = 5
 
   useEffect(() => {
     // Entry point of the app. Make folders here
@@ -176,11 +177,12 @@ export default function App() {
   }, [preInit])
 
   useEffect(() => {
-    // If all meals are loaded, set loaded to true because everything has loaded
+    // If all meals are loaded, set loaded to false because everything has loaded
     if (breakfastLoaded && lunchLoaded && dinnerLoaded)
     {
       if (loading)
       {
+        // ALL meals have just finished loading!
         setLoading(false)
         
       }
@@ -188,7 +190,7 @@ export default function App() {
 
   }, [breakfastLoaded, lunchLoaded, dinnerLoaded])
 
-  // When setting new meal type, show the meal on the UI
+  // When setting new meal type, or when done loading, show the meal on the UI
   useEffect(() =>
   {
     if (!loading)
@@ -213,7 +215,7 @@ export default function App() {
         }
       }
     }
-  },[activeMeal])
+  },[activeMeal, loading])
 
 
   // Loading has started or finished. If it finished, we can set next meal
@@ -408,7 +410,7 @@ export default function App() {
       await RNFetchBlob.config({
         path: path,
       }).fetch('GET', uri);
-      console.log('Image downloaded successfully!');
+      //console.log('Image downloaded successfully!');
     } catch (error) {
       console.error('Error downloading image:', error);
     }
@@ -447,7 +449,7 @@ export default function App() {
   
         // Delete the oldest image file
         await RNFetchBlob.fs.unlink(oldestItem);
-        console.log('Deleted oldest image:', oldestItem);
+        //console.log('Deleted oldest image:', oldestItem);
       }
     } catch (error) {
       console.error('Error checking and deleting oldest image:', error);
@@ -469,6 +471,14 @@ export default function App() {
     setCache(should)
     // store locally so we remember when we re initialize the app
     AsyncStorage.setItem('cache', should+'')
+  }
+
+  // Update value of warn deletions from prefs page
+  function updateWarndels(should)
+  {
+    setWarndels(should)
+    // store locally so we remember when we re initialize the app
+    AsyncStorage.setItem('warndels', should+'')
   }
 
   // Update special requests through preferences page
@@ -601,6 +611,18 @@ export default function App() {
       else{
         setCache(true)
         AsyncStorage.setItem('cache', "true")
+      }
+    })
+
+    AsyncStorage.getItem('warndels').then(value => {
+      if (value)
+      {
+        setWarndels(value === "true")
+      }
+      // Default to true
+      else{
+        setWarndels(true)
+        AsyncStorage.setItem('warndels', "true")
       }
     })
     
@@ -825,7 +847,7 @@ async function learnMeal(meal) {
 }
 
 // Unlearn a meal: Deletes from our meal array.
-function forgetMeal(meal)
+  async function forgetMeal(meal)
 {
   axios.post(`${BASE_URL}/forgetMeal`, { meal: meal, uid: userId });
 
@@ -837,7 +859,7 @@ function forgetMeal(meal)
 
   // Delete image from cache
   let path = `${RNFetchBlob.fs.dirs.DocumentDir}/saved/${meal.meal}/${meal.date}.jpg`
-  if (RNFetchBlob.fs.exists(path))
+  if (await RNFetchBlob.fs.exists(path))
     RNFetchBlob.fs.unlink(path)
 }
 
@@ -1017,7 +1039,7 @@ async function generateMeal(meal, req_in)
   {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Navigation updateCacheOption = {updateCacheOption} cache = {cache} showSearch = {showSearch} updateSearch = {updateSearch} toggleSearch = {toggleSearch} search = {search} help = {showHelpModal} requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+          <Navigation updateWarndels = {updateWarndels} warndels = {warndels} updateCacheOption = {updateCacheOption} cache = {cache} showSearch = {showSearch} updateSearch = {updateSearch} toggleSearch = {toggleSearch} search = {search} help = {showHelpModal} requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
           
           {/* Help Modal */}
           

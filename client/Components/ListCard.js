@@ -1,10 +1,21 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import RNFetchBlob from 'rn-fetch-blob';
 
 const ListCard = ({ meal, onPress, onLongPress, cache }) => {
   const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
   const image = `${RNFetchBlob.fs.dirs.DocumentDir}/saved/${meal.meal}/${meal.date}.jpg`
+
+  const [validImage, setValidImage] = useState(true)
+  useEffect(() => {
+    RNFetchBlob.fs.exists(image)
+    .then((res) => {
+      setValidImage(res)
+    })
+    
+    
+  }, [meal])
+
 
   return (
     <TouchableOpacity
@@ -14,7 +25,7 @@ const ListCard = ({ meal, onPress, onLongPress, cache }) => {
     >
       {/* Add image on the left */}
       <Image 
-        source={image? (!failedToLoad? (meal?.image? {uri: cache? (RNFetchBlob.fs.exists(image)? image: meal.image): meal.image} : require('../assets/notfound.jpg')): (meal?.image? {uri: meal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
+        source={image? (!failedToLoad? (meal?.image? {uri: cache? (validImage? image: meal.image): meal.image} : require('../assets/notfound.jpg')): (meal?.image? {uri: meal.image }: require('../assets/notfound.jpg'))): require('../assets/load.gif')}
         style={styles.image}
         onError={() => {setFailedToLoad(true)}} 
         />

@@ -11,7 +11,7 @@ import {
 import CartCard from '../Components/CartCard';
 
 // Render a list of all meals saved in the database
-const Cart = ({cache, showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal }) => {
+const Cart = ({warndels, cache, showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal }) => {
 
 
 
@@ -30,7 +30,9 @@ const Cart = ({cache, showSearch, search, updateSearch, meals, meal, forgetMeal,
     // Use isOnLeftHalf as needed
     if (isOnLeftHalf)
     {
-      // Delete the item
+      if (warndels)
+      {
+        // Delete the item
       Alert.alert(
         'Delete Meal',
         'Are you sure?\nHolding down the left-side prompts a deletion.',
@@ -40,6 +42,11 @@ const Cart = ({cache, showSearch, search, updateSearch, meals, meal, forgetMeal,
         ],
         { cancelable: true }
       );
+      }
+      else{
+        forgetMeal(meal)
+      }
+      
 
     }
     else
