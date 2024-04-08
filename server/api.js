@@ -1085,7 +1085,7 @@ pingUrl();
   })
   .catch(error => {
     // gpt error: server issue, not client issue
-    console.log('FATAL GPT ERROR: ', error)
+    console.log('FATAL GPT ERROR ')
     res.status(500);
     res.json({error: error})
     return
