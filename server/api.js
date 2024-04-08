@@ -42,7 +42,7 @@ const { default: mongoose } = require('mongoose');
   //const job = cron.schedule('*/30 * * * * *', maintainUsers);
   job.start()
 
- const urlToPing = `https://localhost/ping`;
+ const urlToPing = `https://mealgenius-bes7.onrender.com/ping`;
 const pingUrl = () => {
   axios.get(urlToPing)
     .then((res) => {
@@ -190,38 +190,61 @@ pingUrl();
   })
 
   async function isSubscribed(user_id) {
-    try {
-      const options = {
-        method: 'GET',
-        url: `https://api.revenuecat.com/v1/subscribers/${user_id}`,
-        headers: { accept: 'application/json', Authorization: `Bearer ${REVENUECAT_API_KEY}` },
-      };
-
-      const response = await axios.request(options);
-
-      // The user
-      const subscriber = response.data.subscriber;
-      const entitlements = subscriber.entitlements;
-
-      // Look at the user's entitlements to check for cards
-      for (const value of Object.values(entitlements)) {
-        if (value['product_identifier'] == 'cards') {
-          
-          // Check if it is active
-          const expirationTime = new Date(value.expires_date);
-          const currentTime = new Date();
-          return expirationTime > currentTime;
+    const maxRetries = 3; // Maximum number of retry attempts
+    let retries = 0;
+  
+    while (retries < maxRetries) {
+      try {
+        const options = {
+          method: 'GET',
+          url: `https://api.revenuecat.com/v1/subscribers/${user_id}`,
+          headers: { accept: 'application/json', Authorization: `Bearer ${REVENUECAT_API_KEY}` },
+        };
+  
+        const response = await axios.request(options);
+  
+        // The user
+        const subscriber = response.data.subscriber;
+        const entitlements = subscriber.entitlements;
+  
+        // Look at the user's entitlements to check for cards
+        for (const value of Object.values(entitlements)) {
+          if (value['product_identifier'] === 'cards') {
+            // Check if it is active
+            const expirationTime = new Date(value.expires_date);
+            const currentTime = new Date();
+            return expirationTime > currentTime;
+          }
+        }
+  
+        // If no relevant entitlement was found, assume not subscribed
+        return false;
+      } catch (error) {
+        if (error.response && error.response.status === 429) {
+          const retryAfterHeader = error.response.headers['Retry-After'];
+          if (retryAfterHeader) {
+            const retryAfterMs = parseInt(retryAfterHeader)
+            console.log(`Too Many Requests. Retrying after ${retryAfterMs} milliseconds...`);
+            await wait(retryAfterMs);
+          } else {
+            console.log('Too Many Requests. No Retry-After header found.');
+          }
+          retries++;
+        } else {
+          // Handle other types of errors or non-retryable errors
+          console.error('Error fetching isSubscribed: ', error.response.status);
+          return false;
         }
       }
-
-      // If no relevant entitlement was found, assume not subscribed
-      return false;
-    } catch (error) {
-      console.error(error);
-      // Handle errors and return false
-      return false;
     }
+  
+    throw new Error(`Request to get isSubscribed failed after ${maxRetries} retries`);
   }
+  
+  function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  
 
   // Ensure alive
   router.get('/ping', async(req, res) => {
