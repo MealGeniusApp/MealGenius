@@ -42,6 +42,20 @@ const { default: mongoose } = require('mongoose');
   //const job = cron.schedule('*/30 * * * * *', maintainUsers);
   job.start()
 
+ const urlToPing = `https://localhost:${process.env.PORT}/ping`;
+const pingUrl = () => {
+  axios.get(urlToPing)
+    .then((res) => {
+      console.log(res.data);
+    })
+    .catch((error) => {
+      setTimeout(pingUrl, 2000); // Retry after 2 seconds
+    });
+};
+
+cron.schedule('*/10 * * * *', pingUrl);
+pingUrl();
+
   async function maintainUsers()
   {
     const currentDate = new Date();
@@ -209,6 +223,10 @@ const { default: mongoose } = require('mongoose');
     }
   }
 
+  // Ensure alive
+  router.get('/ping', async(req, res) => {
+    res.json(Date.now())
+  })
 
   // A user just subscribed
   // Verify their reciept => grant tokens
