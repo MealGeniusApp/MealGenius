@@ -41,8 +41,10 @@ const { default: mongoose } = require('mongoose');
   const job = cron.schedule('0 0 * * *', maintainUsers);
   //const job = cron.schedule('*/30 * * * * *', maintainUsers);
   job.start()
-  let latest;
- const urlToPing = `https://mealgenius-bes7.onrender.com/ping`;
+  
+let latest;
+  
+const urlToPing = process.env.PING_URL;
  
 const pingUrl = () => {
   axios.get(urlToPing)
