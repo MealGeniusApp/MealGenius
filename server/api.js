@@ -41,12 +41,14 @@ const { default: mongoose } = require('mongoose');
   const job = cron.schedule('0 0 * * *', maintainUsers);
   //const job = cron.schedule('*/30 * * * * *', maintainUsers);
   job.start()
-
+  let latest;
  const urlToPing = `https://mealgenius-bes7.onrender.com/ping`;
+ 
 const pingUrl = () => {
   axios.get(urlToPing)
     .then((res) => {
-      console.log(res.data);
+      latest = res.data
+      
     })
     .catch((error) => {
       setTimeout(pingUrl, 2000); // Retry after 2 seconds
