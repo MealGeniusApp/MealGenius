@@ -44,7 +44,7 @@ const Subscribe = ({ subscribed, purchase, product, simple }) => {
         </>
       ) : (
         <>
-        <Text style={styles.inactiveText}>Unlock MealCards {'(monthly)'}</Text>
+        <Text style={styles.inactiveText}>Unlock MealCards (monthly)</Text>
 
         <View style = {styles.terms}>
           
@@ -86,8 +86,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   inactiveText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 13,
   },
   subscribeButton: {
     backgroundColor: '#2196F3', // Blue color for Subscribe button
