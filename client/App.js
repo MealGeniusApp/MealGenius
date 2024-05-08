@@ -17,8 +17,11 @@ import Purchases from 'react-native-purchases';
 // Meal Genius server url
 //const BASE_URL = "http://54.204.246.135:3001"
 const BASE_URL = "https://mealgenius-bes7.onrender.com"
+
 // Demo video url
 const DEMO_URL = "https://youtu.be/udKK51jYs7M"
+
+// RevCat API
 const APPL_API = "appl_iymEcrjJXGyUyYLMNqGXZYiaKvP"
 const GOOG_API = "goog_NxhhAZhHJkJSHDfsFAPtYIyEClP"
 
@@ -1109,7 +1112,7 @@ async function generateMeal(meal, req_in)
     );
   }
   return(
-    <Login login = {loggedIn}></Login>
+    <Login login = {loggedIn} api = {BASE_URL}></Login>
   )
 
   

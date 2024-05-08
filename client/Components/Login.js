@@ -14,7 +14,6 @@ import {
   Platform,
 } from "react-native";
 import { Button} from "react-native-elements";
-const BASE_URL = "http://54.204.246.135:3001"
 
 let Constants;
 let deviceInfoModule;
@@ -95,7 +94,7 @@ export default function LoginScreen(props) {
   const onLoginPress = () => {
     setStatus('Attempting login...')
 
-    axios.post(`${BASE_URL}/login`, {email: email, password: password, device: deviceId})
+    axios.post(`${props.api}/login`, {email: email, password: password, device: deviceId})
     .then((res) =>
     {
       // Credentials valid. And device is permitted
@@ -103,6 +102,7 @@ export default function LoginScreen(props) {
       // Instead the below code in the onFulfill function will run when confirming code.
       setStatus('Logging in...')
       props.login(res.data.token)
+      // the above should also provide any metadata such as preferences, instead of the /user endpoint
     })
     .catch((e) => {
       setStatus('Error, please try again')
@@ -135,7 +135,7 @@ export default function LoginScreen(props) {
 
   // Register user
   const onRegisterPress = () => {
-    axios.post(`${BASE_URL}/register`, {email: email, password: password})
+    axios.post(`${props.api}/register`, {email: email, password: password})
     .then((res) =>
     {
       //then, log in
@@ -153,7 +153,7 @@ export default function LoginScreen(props) {
   // User inputted verification code
   const onFulfill = (code) => {
     // check with server
-    axios.post(`${BASE_URL}/confirmDevice`, {email: email, code: code})
+    axios.post(`${props.api}/confirmDevice`, {email: email, code: code})
     .then(async (res) =>
     {
       // Code correct for forgot password
@@ -215,7 +215,7 @@ export default function LoginScreen(props) {
   // Reset password
   const resetPassword = () => {
     // send code and new password as data
-    axios.post(`${BASE_URL}/setNewPassword`, {resetCode: resetCode, pass: pass1, email: email})
+    axios.post(`${props.api}/setNewPassword`, {resetCode: resetCode, pass: pass1, email: email})
     .then((res) => {
       // force login with new password
       props.login(res.data.token)
@@ -232,7 +232,7 @@ export default function LoginScreen(props) {
   const sendResetPassCode = () => {
     // Send code to reset password
     setEmail(emailv1)
-    axios.post(`${BASE_URL}/resetPassword`, {email: emailv1})
+    axios.post(`${props.api}/resetPassword`, {email: emailv1})
     .then((res) =>
     {
       setStatus('Please enter the code sent to your email.')

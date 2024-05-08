@@ -44,7 +44,7 @@ const Subscribe = ({ subscribed, purchase, product, simple }) => {
         </>
       ) : (
         <>
-        <Text style={styles.inactiveText}>Unlock MealCards (monthly)</Text>
+        <Text style={styles.inactiveText}>Unlimited MealCards (monthly)</Text>
 
         <View style = {styles.terms}>
           
