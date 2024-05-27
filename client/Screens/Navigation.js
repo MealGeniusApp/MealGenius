@@ -7,6 +7,7 @@ import Cart from './Cart.js'
 import Icon from 'react-native-vector-icons/Ionicons';
 import List from './List.js'
 import Discover from './Discover.js'
+import Direct from './Direct.js';
 import Preferences from './Preferences.js'
 
 const Tab = createBottomTabNavigator();
@@ -95,12 +96,14 @@ const Navigation = (props) => {
     
           if (route.name === 'Cart') {
             iconName = focused ? 'cart' : 'cart-outline';
-          } else if (route.name === 'List') {
+          } else if (route.name === 'Saved') {
             iconName = focused ? 'list' : 'list-outline';
           } else if (route.name === 'Discover') {
             iconName = focused ? 'pizza' : 'pizza-outline';
           } else if (route.name === 'Preferences') {
             iconName = focused ? 'settings' : 'settings-outline';
+          } else if (route.name === 'Direct') {
+            iconName = focused ? 'chatbox-ellipses' : 'chatbox-ellipses-outline';
           }
     
           return <Icon name={iconName} size={size} color={color} />;
@@ -110,13 +113,17 @@ const Navigation = (props) => {
         <Tab.Screen name="Discover" options={{
           headerTitle: () => <CustomHeader type = "Discover" />,
         }} children={()=><Discover cache = {props.cache} requests={props.requests} swipe={props.swipe} nextMeal = {props.nextMeal} loading = {props.loading} loadProgress = {props.loadProgress} tokens = {props.tokens}/>}/>
-        <Tab.Screen name="List" options={{
+       
+       <Tab.Screen name="Direct" 
+          children={()=><Direct tokens = {props.tokens} saveMeal = {props.saveMeal} generate = {props.directMeal} updateUsePrefs = {props.updateUsePrefs} usePrefs = {props.usePrefs} cache = {props.cache} cartMeal={props.cartMeal}/>} />
+    
+        <Tab.Screen name="Saved" options={{
           headerTitle: () => <CustomHeader type= "Saved"/>,
         }}
 
         children={()=><List warndels = {props.warndels} cache = {props.cache} showSearch = {props.showSearch} search = {props.search} updateSearch = {props.updateSearch} forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
     
-      <Tab.Screen name="Cart" options={{
+        <Tab.Screen name="Cart" options={{
           headerTitle: () => <CustomHeader type = "Shopping"/>,
         }}
 

@@ -1027,27 +1027,54 @@ pingUrl();
   })
 
 
-  // Learn the meal
-  router.post('/learnMeal', async(req,res) => {
-    let meal = req.body.meal
-    let uid = req.body.uid
 
-    // Load user object to update meals array
+  // Save a meal. This is used if we learned a meal in Direct Meal page, and now want to save it to the DB.
+  router.post('/saveMeal', async(req,res) => {
+    let uid = req.body.uid
+    let meal = req.body.meal
+
     let user = await User.findById(uid)
     if (!user)
     {
         res.status(500);
-        res.json({error: "Could not load user from DB"})
+        res.json({error: "Could not load user from DB to save the meal"})
+        
+    }
+
+    user.meals[meal.meal].push(meal);
+    user.save()
+    
+  })
+
+
+  // Learn the meal
+  router.post('/learnMeal', async(req,res) => {
+    let meal = req.body.meal
+    let uid = req.body.uid
+    let reqs = req.body.reqs
+    let save = req.body.save // we should not save the meal of req_in was passed in App.js because this means it was from the Direct Meal tab.
+
+    // Add the meal immediately to the DB, without instructions
+    let user = await User.findById(uid)
+    if (!user)
+    {
+        res.status(500);
+        res.json({error: "Could not load user from DB to save the meal"})
         return
       
     }
 
-    // Add the meal immediately to the DB, without instructions
-    user.meals[meal.meal].push(meal);
-    user.save()
+    if (save)
+    {
+      user.meals[meal.meal].push(meal);
+      user.save()
+    }
+    
+    
+    
 
     // Form a message to ask chatGPT
-    let query = `Give me a list of instructions, ingredients and nutrition for ${meal.title}: ${meal.description}. Your response must be structured in this way: INGREDIENTS: {numbered list of ingredients} INSTRUCTIONS: {numbered list of instructions} NUTRITION: {list of nutrition facts}. Do not exceed 250 words in your combined response. Do not deviate from this format.`
+    let query = `Give me a list of instructions, ingredients and nutrition for ${meal.title}: ${meal.description}. ${reqs? "You must follow these requests: " + reqs : ""} Your response must be structured in this way: INGREDIENTS: {numbered list of ingredients} INSTRUCTIONS: {numbered list of instructions} NUTRITION: {list of nutrition facts}. Do not exceed 250 words in your combined response. Do not deviate from this format.`
 
     const endpoint = 'https://api.openai.com/v1/chat/completions';
 
@@ -1077,11 +1104,18 @@ pingUrl();
     // let user2 = await User.findById(uid)
 
     // Get and update the learned meal again (incase its cart value has been updating while learning)
-    const latestMeal = user.meals[meal.meal].find(item => item.date === meal.date);
+    let latestMeal = save ? user.meals[meal.meal].find(item => item.date === meal.date) : meal
 
     latestMeal.ingredients = result.substring(result.toUpperCase().indexOf('IGREDIENTS:')+ 14,  result.toUpperCase().indexOf('INSTRUCTIONS') - 1)
     latestMeal.instructions = result.substring(result.toUpperCase().indexOf('INSTRUCTIONS:') + 14, result.toUpperCase().indexOf('NUTRITION') - 1)
     latestMeal.nutrition = result.substring(result.toUpperCase().indexOf('NUTRITION') + 11, result.length)
+
+    // If we aren't saving, quit now
+    if (!save)
+      res.json({
+        meal: latestMeal
+      })
+
 
     // Prepare the update query
     const updateValues = {
@@ -1127,6 +1161,7 @@ pingUrl();
       let meal = req.body.meal
       let complexity = req.body.complexity
       let requests = req.body.requests
+      let directHistory = req.body.history // override history from DB, useful for direct meal feature
 
       // Load user object to get history and tokens
       let user = await User.findById(req.body.user_id)
@@ -1146,7 +1181,15 @@ pingUrl();
       }
 
       let history_str = ""
-      if (history[meal].length)
+      // history override
+      if (directHistory)
+      {
+        history_str = directHistory
+      }
+      else if (history[meal])
+      {
+
+        if (history[meal].length)
     {
 
       if (history[meal].length === 1)
@@ -1174,13 +1217,17 @@ pingUrl();
       }
     } // end history section
 
-      let query = `give me a random ${complexity} ${meal} meal and a 20 word description. Do not use any of the following: ${history_str} You must follow these additional requests: ${requests}. Your response must be in the form of FOOD: {meal} DESC: {description}`
+      }
+
+      
+
+      let query = `give me a random ${complexity} ${meal} meal and a 20 word description. ${history_str ? "Do not use any of the following:" + history_str: ""} ${requests ? "You must follow these additional requests:" + requests: ""} Your response must be in the form of FOOD: {meal} DESC: {description}${!meal? " TYPE: {meal type, which is either 'breakfast', 'lunch', or 'dinner'}" : ""}`
       //console.log(query)
       // Result
       let title = ''
       let description = ''
       let image = ''
-
+      console.log(query)
 
       const endpoint = 'https://api.openai.com/v1/chat/completions';
 
@@ -1206,7 +1253,13 @@ pingUrl();
       result = response.data.choices[0].message.content
 
       title = result.substring(result.toUpperCase().indexOf('FOOD:')+6,  result.toUpperCase().indexOf('DESC') - 1).replace(new RegExp('"', 'g'), '').replace(new RegExp(':', 'g'), '')
-      description = result.substring(result.toUpperCase().indexOf('DESC: ') + 6, result.length)
+
+      let endIndex = !meal ? result.toUpperCase().indexOf('TYPE:') : result.length
+      description = result.substring(result.toUpperCase().indexOf('DESC: ') + 6, endIndex)
+
+      // If we didn't provide a meal type, let AI predict it and categorize based on it's thoughts.
+      if (!meal)
+        meal = result.substring(result.toUpperCase().indexOf('TYPE: ') + 6, result.length).toLowerCase()
 
       // CSE Grab
       const apiKey = process.env.CSE_API;
@@ -1230,7 +1283,7 @@ pingUrl();
         const end = haystack.substring(start + 5, haystack.length).indexOf('"')
 
         image = haystack.substring(start + 5, start + end + 5)
-        confirmMeal(user, meal,  res, title, description, image)
+        confirmMeal(user, meal, res, title, description, image)
       
       })
 
@@ -1259,24 +1312,31 @@ pingUrl();
 
   async function confirmMeal(user, meal, res, title, description, image)
   {
-    // History is at its max length. Remove oldest item
-    if (user.history[meal].length > MAX_HISTORY_LENGTH)
+    if (user.history[meal])
     {
-      user.history[meal].shift()
-    }
+      if (user.history[meal].length > MAX_HISTORY_LENGTH)
+      {
+        user.history[meal].shift()
+      }
 
-    user.history[meal].push(title);
+      user.history[meal].push(title);
+    }
+    // History is at its max length. Remove oldest item
+    
 
     // Decrease the tokens field by 1
     user.tokens--;
     
     // Save the updated user with less tokens
+    
+    // THIS IS THE RETURN FOR GENERATE MEAL!
     try {
       await user.save();
       // Successful return 
       res.json({
         title: title,
         description: description,
+        meal: meal,
         image: image,
         tokens: user.tokens, // return true token count for server side validation
       })

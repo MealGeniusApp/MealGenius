@@ -156,7 +156,7 @@ const List = ({warndels, showSearch, search, updateSearch, meals, meal, forgetMe
                 {meals[meal].map((mealItem, index) => (
                   <TouchableWithoutFeedback key={index}>
                     <View>
-                      <ListCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
+                      <ListCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} cache = {cache}/>
                     </View>
                   </TouchableWithoutFeedback>
                 ))}

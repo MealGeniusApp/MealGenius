@@ -108,7 +108,7 @@ const Cart = ({warndels, cache, showSearch, search, updateSearch, meals, meal, f
                 {meals[meal].filter(mealItem => mealItem.cart).map((mealItem, index) => (
                   <TouchableWithoutFeedback key={index}>
                     <View>
-                      <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} />
+                      <CartCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} cache = {cache} />
                     </View>
                   </TouchableWithoutFeedback>
                 ))}
