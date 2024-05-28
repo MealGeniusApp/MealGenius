@@ -220,12 +220,10 @@ const Direct = ({saveMeal, generate, cache, cartMeal, updateUsePrefs, usePrefs, 
     <View style = {{margin: 10}}>
 
       <View>
-        <Text>
-          What would you like to make?
-        </Text>
+        <Image style = {{width: 100, height: 100, alignSelf: 'center'}} source = {require("../assets/icon.png")}/>
 
         <TextInput
-          placeholder="Enter a meal and press go..."
+          placeholder="What would you like to make?"
           returnKeyType="go"
           onSubmitEditing={() => {
             handleGenerateMeal();
@@ -246,7 +244,7 @@ const Direct = ({saveMeal, generate, cache, cartMeal, updateUsePrefs, usePrefs, 
 
         {/* Option for using preferences requests */}
         <View style={styles.switch}>
-          <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 16  }}>Use preferences</Text>
+          <Text style={{ fontSize: Platform.OS === 'ios' && Platform.isPad ? 26 : 13  }}>Also use requests from preferences page</Text>
           <Switch
             value={usePrefs}
             onValueChange={() => {

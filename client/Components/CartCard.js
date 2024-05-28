@@ -3,7 +3,7 @@ import { Platform, View, Text, Image, StyleSheet, TouchableOpacity } from 'react
 import { useState, useEffect} from 'react';
 import RNFetchBlob from 'rn-fetch-blob';
 
-const CartCard = ({ meal, onPress, onLongPress, cache }) => {
+const CartCard = ({ meal, onLongPress, cache }) => {
   // For image display, new cached version
   const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
   const image = `${RNFetchBlob.fs.dirs.DocumentDir}/saved/${meal.meal}/${meal.date}.jpg`
@@ -41,7 +41,7 @@ useEffect(() => {
 
   return (
     <TouchableOpacity
-      onPress={() => {onPress(meal); setSelected(!selected)}}
+      onPress={() => {setSelected(!selected)}}
       onLongPress={(event) => onLongPress(event, meal)}
       style={{ ...styles.card, height: selected? 'auto': Platform.OS === 'ios' && Platform.isPad ? 200 : 120 }}
     >

@@ -9,6 +9,7 @@ import List from './List.js'
 import Discover from './Discover.js'
 import Direct from './Direct.js';
 import Preferences from './Preferences.js'
+import CartSwitch from '../Components/CartSwitch.js';
 
 const Tab = createBottomTabNavigator();
 
@@ -32,7 +33,7 @@ const Navigation = (props) => {
 
     if (type == "Preferences")
     return (
-      <View style={{top: "5%", width: '100%', flex: 1, flexDirection: 'row', justifyContent: 'space-between'}}>
+      <View style={{top: "3%", width: '100%', flex: 1, flexDirection: 'row', justifyContent: 'space-between'}}>
 
 
         <View>
@@ -54,7 +55,7 @@ const Navigation = (props) => {
   if (type =="Discover")
   
     return (
-      <View style={{top: "5%",width: '100%', flex: 1, flexDirection: 'row', justifyContent: 'space-between'}}>
+      <View style={{top: "3%",width: '100%', flex: 1, flexDirection: 'row', justifyContent: 'space-between'}}>
         <TouchableOpacity onPress={handleTitlePress}>
           <Text style = {{fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 17}}>{ `${type} ${capitalizeFirstLetter(props.mealTitle)}`}</Text>
         </TouchableOpacity>
@@ -62,24 +63,31 @@ const Navigation = (props) => {
       
     );
 
-    // Type is list or cart (show search icon)
+    if (type =="Saved")
     return (
-      <View style={{top: "5%",width: '100%', flex: 1, flexDirection: 'row', justifyContent: 'space-between'}}>
+      <View style={{top: "3%",width: '100%', flex: 1, flexDirection: 'row', justifyContent: 'space-between'}}>
         <TouchableOpacity onPress={handleTitlePress}>
           <Text style = {{fontWeight: 'bold', fontSize: Platform.OS === 'ios' && Platform.isPad ? 25 : 17}}>{ `${type} ${capitalizeFirstLetter(props.mealTitle)}`}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => props.toggleSearch()}>
-          <View style={{ paddingLeft: 80}}> 
-            <Image
-              style={{
-                width: Platform.OS === 'ios' && Platform.isPad ? 30 : 20,
-                height: Platform.OS === 'ios' && Platform.isPad ? 30 : 20
-              }}
-              source={require('../assets/search.png')}
-            />
-          </View>
-        </TouchableOpacity>
-
+        <View style = {{display: 'flex', flexDirection: 'row'}}>
+          <View style = {{paddingRight: 15, top: -5}}> 
+            <CartSwitch
+              value = {props.cart} 
+              onValueChange={props.setCart} 
+              imageSource={require('../assets/cart.png')}/>
+            </View>
+          <TouchableOpacity onPress={() => props.toggleSearch()}>
+            <View> 
+              <Image
+                style={{
+                  width: Platform.OS === 'ios' && Platform.isPad ? 32 : 22,
+                  height: Platform.OS === 'ios' && Platform.isPad ? 32 : 22
+                }}
+                source={require('../assets/search.png')}
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     
   );
@@ -94,15 +102,16 @@ const Navigation = (props) => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
     
-          if (route.name === 'Cart') {
-            iconName = focused ? 'cart' : 'cart-outline';
-          } else if (route.name === 'Saved') {
+          // if (route.name === 'Cart') {
+          //   iconName = focused ? 'cart' : 'cart-outline';
+          // } 
+          if (route.name === 'Saved') {
             iconName = focused ? 'list' : 'list-outline';
           } else if (route.name === 'Discover') {
             iconName = focused ? 'pizza' : 'pizza-outline';
           } else if (route.name === 'Preferences') {
             iconName = focused ? 'settings' : 'settings-outline';
-          } else if (route.name === 'Direct') {
+          } else if (route.name === 'Direct Meals') {
             iconName = focused ? 'chatbox-ellipses' : 'chatbox-ellipses-outline';
           }
     
@@ -114,21 +123,21 @@ const Navigation = (props) => {
           headerTitle: () => <CustomHeader type = "Discover" />,
         }} children={()=><Discover cache = {props.cache} requests={props.requests} swipe={props.swipe} nextMeal = {props.nextMeal} loading = {props.loading} loadProgress = {props.loadProgress} tokens = {props.tokens}/>}/>
        
-       <Tab.Screen name="Direct" 
+       <Tab.Screen name="Direct Meals" 
           children={()=><Direct tokens = {props.tokens} saveMeal = {props.saveMeal} generate = {props.directMeal} updateUsePrefs = {props.updateUsePrefs} usePrefs = {props.usePrefs} cache = {props.cache} cartMeal={props.cartMeal}/>} />
     
         <Tab.Screen name="Saved" options={{
           headerTitle: () => <CustomHeader type= "Saved"/>,
         }}
 
-        children={()=><List warndels = {props.warndels} cache = {props.cache} showSearch = {props.showSearch} search = {props.search} updateSearch = {props.updateSearch} forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
+        children={()=><List cart = {props.cart} warndels = {props.warndels} cache = {props.cache} toggleSearch = {props.toggleSearch} showSearch = {props.showSearch} search = {props.search} updateSearch = {props.updateSearch} forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
     
-        <Tab.Screen name="Cart" options={{
+        {/* <Tab.Screen name="Cart" options={{
           headerTitle: () => <CustomHeader type = "Shopping"/>,
         }}
 
         children={()=><Cart warndels = {props.warndels} cache = {props.cache} showSearch = {props.showSearch} search = {props.search} updateSearch = {props.updateSearch} forgetMeal={props.forgetMeal} cartMeal={props.cartMeal} meals = {props.meals} meal = {props.nextMeal? props.nextMeal.meal: 'breakfast'}/>} />
-    
+     */}
         <Tab.Screen name="Preferences" options={{
           headerTitle: () => <CustomHeader type = "Preferences"/>,
         }}

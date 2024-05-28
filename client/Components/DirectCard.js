@@ -23,7 +23,7 @@ const DirectCard = ({ meal, onPress, onLongPress, cache }) => {
       
 
       <View style={styles.container}>
-        <Text style={styles.title}>{meal.title}</Text>
+        <Text style={styles.title}>{meal.title} ({meal.meal})</Text>
         {/* Conditionally render the image in the top right corner */}
       {meal.cart && (
           <Image
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     paddingVertical: 16,
-    marginTop: 25,
+    marginTop: 15,
     elevation: 2,
     shadowColor: 'black',
     shadowOpacity: 0.2,

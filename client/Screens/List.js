@@ -12,13 +12,15 @@ import {
   Platform,
   TextInput,
   Keyboard,
-  Alert
+  Alert,
+  Switch
 } from 'react-native';
 import ListCard from '../Components/ListCard';
+import CartCard from '../Components/CartCard';
 import RNFetchBlob from 'rn-fetch-blob';
 
 // Render a list of all meals saved in the database
-const List = ({warndels, showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal, cache }) => {
+const List = ({toggleSearch, warndels, showSearch, search, updateSearch, meals, meal, forgetMeal, cartMeal, cache, cart }) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [activeTab, setActiveTab] = useState('Ingredients');
@@ -28,6 +30,7 @@ const List = ({warndels, showSearch, search, updateSearch, meals, meal, forgetMe
   // Cached image state
   const [image, setImage] = useState('')
   const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
+
   
 
   // Executes when we get ingredient updates
@@ -117,6 +120,10 @@ const List = ({warndels, showSearch, search, updateSearch, meals, meal, forgetMe
 
             <TextInput
               placeholder="Search here..."
+              autoFocus={true}
+              onBlur={() => {
+                if (!search) toggleSearch()
+              }}
               returnKeyType="done" // Set returnKeyType to 'done' to display 'Go' button on the keyboard
               onSubmitEditing={()=> {Keyboard.dismiss()}} // Handle submit action when 'Go' button is pressed
               value = {search}
@@ -135,35 +142,43 @@ const List = ({warndels, showSearch, search, updateSearch, meals, meal, forgetMe
 
     <ScrollView style = {{height: "100%"}}>
     <View>
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      
+          <TouchableWithoutFeedback onPress = {() => Keyboard.dismiss()}>
+      <View>
           {/* Render only meals containing the search text */}
           {showSearch ? (
-            (
               <View key={meal}>
-                {meals[meal].filter(mealItem => mealItem.title.toLowerCase().includes(search.toLowerCase())).map((mealItem, index) => (
+                {meals[meal].filter(mealItem => cart ? mealItem.cart : true && mealItem.title.toLowerCase().includes(search.toLowerCase()))
+.map((mealItem, index) => (
                   <TouchableWithoutFeedback key={index}>
                     <View>
-                      <ListCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} cache = {cache}/>
+                      {cart &&  <CartCard meal={mealItem} onLongPress={handleLongPress} cache = {cache} />}
+                      {!cart && <ListCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem) } cache = {cache} />}
+                      
                     </View>
                   </TouchableWithoutFeedback>
                 ))}
               </View>
-            )
+            
           ) : (
             // Render all meals if showSearch is false
-            (
               <View key={meal}>
-                {meals[meal].map((mealItem, index) => (
+                {meals[meal].filter(mealItem => cart ? mealItem.cart : true).map((mealItem, index) => (
                   <TouchableWithoutFeedback key={index}>
                     <View>
-                      <ListCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem)} cache = {cache}/>
+                      {cart &&  <CartCard meal={mealItem} onLongPress={handleLongPress} cache = {cache} />}
+                      {!cart && <ListCard meal={mealItem} onLongPress={handleLongPress} onPress={() => onPress(mealItem) } cache = {cache} />}
+                      
                     </View>
                   </TouchableWithoutFeedback>
                 ))}
               </View>
-            )
           )}
-          </TouchableWithoutFeedback>
+        </View>
+        </TouchableWithoutFeedback>
+        
+      
+    
         </View>
 
       {/* Modal */}
@@ -277,6 +292,14 @@ const List = ({warndels, showSearch, search, updateSearch, meals, meal, forgetMe
 };
 
 const styles = StyleSheet.create({
+  switch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal:16,
+    paddingVertical: 4,
+    backgroundColor: 'white',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',

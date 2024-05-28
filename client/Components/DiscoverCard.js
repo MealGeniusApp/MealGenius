@@ -3,24 +3,19 @@ import { View, Image, Text, StyleSheet, Animated, Platform } from 'react-native'
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import RNFetchBlob from 'rn-fetch-blob';
 
-const SwipeableCard = ({ nextMeal, swipe, cache}) => {
+const SwipeableCard = ({ nextMeal, swipe, cache }) => {
   const [translateX] = useState(new Animated.Value(0));
   const [opacity] = useState(new Animated.Value(1));
-  const [validImage, setValidImage] = useState(true)
-
-  const [failedToLoad, setFailedToLoad] = useState(false) // allow fallback image if the image cannot load
-  const image = nextMeal? `${RNFetchBlob.fs.dirs.DocumentDir}/${nextMeal.meal}/${nextMeal.date}.jpg`: ''
-  const SWIPE_THRESH = 25
+  const [validImage, setValidImage] = useState(true);
+  const [failedToLoad, setFailedToLoad] = useState(false);
+  const image = nextMeal ? `${RNFetchBlob.fs.dirs.DocumentDir}/${nextMeal.meal}/${nextMeal.date}.jpg` : '';
+  const SWIPE_THRESH = 25;
 
   useEffect(() => {
-    RNFetchBlob.fs.exists(image)
-    .then((res) => {
-      setValidImage(res)
-    })
-    
-    
-  }, [nextMeal])
-
+    RNFetchBlob.fs.exists(image).then((res) => {
+      setValidImage(res);
+    });
+  }, [nextMeal]);
 
   const onGestureEvent = Animated.event(
     [{ nativeEvent: { translationX: translateX } }],
@@ -33,77 +28,51 @@ const SwipeableCard = ({ nextMeal, swipe, cache}) => {
     extrapolate: 'clamp',
   });
 
-  
-
   const onGestureEnd = () => {
-    // Done swiping
-    // Aborted Swipe
-    if (translateX._value  <= SWIPE_THRESH && translateX._value >= -SWIPE_THRESH) {
+    if (translateX._value <= SWIPE_THRESH && translateX._value >= -SWIPE_THRESH) {
       Animated.spring(translateX, {
         toValue: 0,
         useNativeDriver: false,
       }).start();
-    }
-
-    // Swiped Right
-    else if (translateX._value > 0)
-    {
-      
-
+    } else if (translateX._value > 0) {
       Animated.timing(translateX, {
-        toValue: 500, // Target value
-        duration: 300, // Animation duration
+        toValue: 500,
+        duration: 300,
         useNativeDriver: false,
       }).start(() => replaceCard(true));
-
-    }
-
-    // Swiped left
-    else if (translateX._value < 0)
-    {
+    } else if (translateX._value < 0) {
       Animated.timing(translateX, {
-        toValue: -500, // Target value
-        duration: 300, // Animation duration
+        toValue: -500,
+        duration: 300,
         useNativeDriver: false,
       }).start(() => replaceCard(false));
-      
     }
-    
   };
 
-
-  // Load the next card onto the screen and into reference
   const replaceCard = (right) => {
-    // Call swipe event to load the next meal to the UI
-    swipe(right)
-    
-    opacity._value = 0
+    swipe(right);
+    opacity._value = 0;
 
-    // Put the card back in the center
     const resetTranslateAnimation = Animated.timing(translateX, {
       toValue: 0,
       duration: 0,
       useNativeDriver: false,
     });
 
-    // Fade in the card
     const fadeInAnimation = Animated.timing(opacity, {
       toValue: 1,
       duration: 150,
       useNativeDriver: false,
     });
 
-    //resetTranslateAnimation.start()
-    Animated.sequence([resetTranslateAnimation, fadeInAnimation]).start()
-  }
-
+    Animated.sequence([resetTranslateAnimation, fadeInAnimation]).start();
+  };
 
   return (
     <PanGestureHandler
       onGestureEvent={onGestureEvent}
       onHandlerStateChange={(event) => {
         onGestureEnd();
-
       }}
     >
       <Animated.View
@@ -111,23 +80,27 @@ const SwipeableCard = ({ nextMeal, swipe, cache}) => {
           styles.card,
           {
             opacity: opacity,
-            transform: [
-              { translateX: translateX },
-              { rotate: rotateCard },
-            ],
+            transform: [{ translateX: translateX }, { rotate: rotateCard }],
           },
         ]}
       >
         <Text style={styles.title}>{nextMeal?.title}</Text>
         <View style={styles.imagecontainer}>
           <Image
-            source={(nextMeal?.image? {uri: cache? (validImage? image: nextMeal.image): nextMeal.image} : require('../assets/notfound.jpg'))}
+            source={
+              nextMeal?.image
+                ? { uri: cache ? (validImage ? image : nextMeal.image) : nextMeal.image }
+                : require('../assets/notfound.jpg')
+            }
             style={styles.image}
-            onError={() => setFailedToLoad(true)} // for some reason, failed to load was true and source was not using the image although it was present.
-          /> 
+            onError={() => setFailedToLoad(true)}
+          />
         </View>
-        
         <Text style={styles.description}>{nextMeal?.description}</Text>
+        <View style={styles.bottomRightContainer}>
+          <Image source={require('../assets/icon.png')} style={styles.bottomRightImage} />
+          <Text style={styles.bottomRightText}>Meal Genius</Text>
+        </View>
       </Animated.View>
     </PanGestureHandler>
   );
@@ -146,12 +119,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 2 },
-    height: Platform.OS === 'ios' && Platform.isPad ? 1150 : 620
+    height: Platform.OS === 'ios' && Platform.isPad ? 1150 : 620,
+    position: 'relative',
   },
   title: {
     fontSize: Platform.OS === 'ios' && Platform.isPad ? 40 : 18,
     fontWeight: 'bold',
-    paddingBottom: 16
+    paddingBottom: 16,
   },
   description: {
     marginTop: 8,
@@ -160,15 +134,29 @@ const styles = StyleSheet.create({
   },
   imagecontainer: {
     alignItems: 'center',
-    paddingBottom: 16
+    paddingBottom: 16,
   },
   image: {
     width: Platform.OS === 'ios' && Platform.isPad ? 300 : 200,
     height: Platform.OS === 'ios' && Platform.isPad ? 300 : 200,
-    borderWidth: 1,     
-    borderColor: 'gray', 
-    borderRadius: 5,      
-    resizeMode: 'cover', // You can choose other resizeMode values
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    resizeMode: 'cover',
+  },
+  bottomRightContainer: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    alignItems: 'center',
+  },
+  bottomRightImage: {
+    width: 40,
+    height: 40,
+  },
+  bottomRightText: {
+    marginTop: 4,
+    fontSize: 10,
   },
 });
 

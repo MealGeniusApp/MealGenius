@@ -15,8 +15,8 @@ import Purchases from 'react-native-purchases';
 
 
 // Meal Genius server url
-const BASE_URL = "http://172.20.10.10:3001"
-//const BASE_URL = "https://mealgenius-bes7.onrender.com"
+//const BASE_URL = "http://172.20.10.10:3001"
+const BASE_URL = "https://mealgenius-bes7.onrender.com"
 
 // Demo video url
 const DEMO_URL = "https://youtu.be/udKK51jYs7M"
@@ -84,6 +84,8 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   const [isModalVisible, setModalVisible] = useState(false)
+
+  const [cart, setCart] = useState(false);
   const MIN_QUEUE_SIZE = 5
 
   useEffect(() => {
@@ -1106,7 +1108,7 @@ async function generateMeal(meal, req_in, hist_in) {
   {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Navigation saveMeal = {saveMeal} directMeal = {directMeal} usePrefs = {usePrefs} updateUsePrefs = {updateUsePrefs} updateWarndels = {updateWarndels} warndels = {warndels} updateCacheOption = {updateCacheOption} cache = {cache} showSearch = {showSearch} updateSearch = {updateSearch} toggleSearch = {toggleSearch} search = {search} help = {showHelpModal} requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
+          <Navigation cart = {cart} setCart = {setCart} saveMeal = {saveMeal} directMeal = {directMeal} usePrefs = {usePrefs} updateUsePrefs = {updateUsePrefs} updateWarndels = {updateWarndels} warndels = {warndels} updateCacheOption = {updateCacheOption} cache = {cache} showSearch = {showSearch} updateSearch = {updateSearch} toggleSearch = {toggleSearch} search = {search} help = {showHelpModal} requests = {requests} updateRequests= {updateRequests} deleteAccount = {deleteAccount} subscribed = {subscribed} purchase = {purchase} managementURL= {managementURL} cartMeal={cartMeal} forgetMeal={forgetMeal} meals={meals} refreshMeals = {refreshMeals} prefs = {preferences} savePreferences = {savePreferences} clearHistory = {clearHistory} logout = {logOut} loadProgress = {progress} changeMeal = {changeMeal} mealTitle = {activeMeal} swipe = {swiped} nextMeal = {nextMeal} loading = {loading} tokens = {tokens}></Navigation>
           
           {/* Help Modal */}
           
