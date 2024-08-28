@@ -50,6 +50,7 @@ const pingUrl = () => {
   axios.get(urlToPing)
     .then((res) => {
       latest = res.data
+      console.log(latest)
       
     })
     .catch((error) => {
@@ -57,7 +58,7 @@ const pingUrl = () => {
     });
 };
 
-cron.schedule('*/10 * * * *', pingUrl);
+cron.schedule('*/4 * * * *', pingUrl);
 pingUrl();
 
   async function maintainUsers()
