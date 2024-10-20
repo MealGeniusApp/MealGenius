@@ -69,8 +69,8 @@ pingUrl();
     const mailOptions = {
       from: process.env.MAILER_USER,
       to: process.env.ADMIN_EMAIL,
-      subject: `Successful MealGenius Maitenance`,
-      text: `Hi Peter, just a confirmation that maitenance has ran for all MealGenius users successfully.`,
+      subject: `Successful MealEstate Maitenance`,
+      text: `Hi Peter, just a confirmation that maitenance has ran for all MealEstate users successfully.`,
     };
   
     // Send the email
@@ -135,8 +135,8 @@ pingUrl();
           const mailOptions = {
             from: process.env.MAILER_USER,
             to: user.email,
-            subject: `MealGenius account scheduled for deletion`,
-            text: `Your MealGenius account hasn't been accessed in ${user.dormant} days, 
+            subject: `MealEstate account scheduled for deletion`,
+            text: `Your MealEstate account hasn't been accessed in ${user.dormant} days, 
             and data is scheduled to be purged from our system on ${formattedDate}. 
             To keep your data, simply log in to your account. We hope to see you soon!`,
           };
@@ -191,7 +191,7 @@ pingUrl();
 
 
   router.get('/', (req,res) => {
-      res.send('Meal Genius')
+      res.send('Meal Estate')
   })
 
   async function isSubscribed(user_id) {
@@ -282,7 +282,7 @@ pingUrl();
             const mailOptions = {
               from: process.env.MAILER_USER,
               to: process.env.ADMIN_EMAIL,
-              subject: `🎉 MealGenius NEW SUBSCRIBER! `,
+              subject: `🎉 MealEstate NEW SUBSCRIBER! `,
               text: `Woohoo! 🥳 ${user.email} just subscribed!`,
             };
           
@@ -489,7 +489,7 @@ pingUrl();
             const mailOptions = {
               from: process.env.MAILER_USER,
               to: req.body.email,
-              subject: `${code} is your MealGenius confirmaition code`,
+              subject: `${code} is your MealEstate confirmaition code`,
               text: `A new password was requested for your account. If this was you, enter code ${code} in the app. If not, somebody tried to log in using your email.`,
             };
           
@@ -540,8 +540,8 @@ pingUrl();
             const mailOptions = {
               from: process.env.MAILER_USER,
               to: user.email,
-              subject: `${code} is your MealGenius confirmaition code`,
-              text: `Your MealGenius account was accessed from a new location. If this was you, enter code ${code} in the app. If not, you can change your password in the app. Feel free to reply to this email for any assistance!`,
+              subject: `${code} is your MealEstate confirmaition code`,
+              text: `Your MealEstate account was accessed from a new location. If this was you, enter code ${code} in the app. If not, you can change your password in the app. Feel free to reply to this email for any assistance!`,
             };
           
             // Send the email
@@ -685,7 +685,7 @@ pingUrl();
       from: process.env.MAILER_USER,
       to: process.env.MAILER_USER,
       bcc: process.env.ADMIN_EMAIL,
-      subject: `MealGenius Support`,
+      subject: `MealEstate Support`,
       text: `${request.body.msg}\n\nfrom ${request.body.email} (${request.body.uid})`,
     };
   
@@ -725,7 +725,7 @@ pingUrl();
                   const mailOptions = {
                     from: process.env.MAILER_USER,
                     to: process.env.ADMIN_EMAIL,
-                    subject: `MealGenius new user! 😁`,
+                    subject: `MealEstate new user! 😁`,
                     text: `${request.body.email} has signed up!`,
                   };
                 
