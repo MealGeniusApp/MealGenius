@@ -29,7 +29,7 @@ const CodeEntry = ({ fulfilled, status, back }) => {
             
           <View style={styles.loginFormView}>
             
-            <Text style={styles.logoText}>Meal Genius</Text>
+            <Text style={styles.logoText}>Meal Estate</Text>
             <Text style={styles.errorText}>{status}</Text>  
 
             <CodeInput

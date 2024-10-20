@@ -99,7 +99,7 @@ const SwipeableCard = ({ nextMeal, swipe, cache }) => {
         <Text style={styles.description}>{nextMeal?.description}</Text>
         <View style={styles.bottomRightContainer}>
           <Image source={require('../assets/icon.png')} style={styles.bottomRightImage} />
-          <Text style={styles.bottomRightText}>Meal Genius</Text>
+          <Text style={styles.bottomRightText}>Meal Estate</Text>
         </View>
       </Animated.View>
     </PanGestureHandler>
