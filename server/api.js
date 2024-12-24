@@ -811,7 +811,7 @@ pingUrl();
                 });
               }
 
-              console.log('Logging in..')
+              console.log('Logging in: ', user.email)
 
               //Now check if device is permitted
               if (user.devices.includes(request.body.device) || user.email == "demo@demo.demo")
@@ -1177,8 +1177,8 @@ pingUrl();
       let history = user.history
       if (tokens <= 0)
       {
-        res.status(422);
-        res.json({error: "Insufficient tokens"})
+        res.status(422).json({error: "Insufficient tokens"})
+        return
       }
 
       let history_str = ""
@@ -1228,7 +1228,6 @@ pingUrl();
       let title = ''
       let description = ''
       let image = ''
-      console.log(query)
 
       const endpoint = 'https://api.openai.com/v1/chat/completions';
 

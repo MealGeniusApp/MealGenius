@@ -24,5 +24,5 @@ app.use('/', api);
 // Start the server on port 3000
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
-  console.log(`MealGenius Server is running on port ${PORT}`);
+  console.log(`MealEstate Server is running on port ${PORT}`);
 });
