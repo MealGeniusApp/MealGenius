@@ -8,7 +8,6 @@
   require('dotenv').config();
   var axios = require('axios')
   const bcrypt = require("bcrypt");
-  const nodemailer = require('nodemailer');
 const { default: mongoose } = require('mongoose');
   const MAX_HISTORY_LENGTH = process.env.MAX_HISTORY_LENGTH
 
@@ -21,16 +20,7 @@ const { default: mongoose } = require('mongoose');
 
 
 
-  // Change password button on login page, send code, when verified, choose new password
-
-  // Mailer
-  const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-      user: process.env.MAILER_USER,
-      pass: process.env.MAILER_PASS,
-    },
-  });
+  
 
 
   // Daily Maitenance
@@ -65,21 +55,7 @@ pingUrl();
   {
     const currentDate = new Date();
 
-    // Email me a confirmation that the server is running
-    const mailOptions = {
-      from: process.env.MAILER_USER,
-      to: process.env.ADMIN_EMAIL,
-      subject: `Successful MealEstate Maitenance`,
-      text: `Hi Peter, just a confirmation that maitenance has ran for all MealEstate users successfully.`,
-    };
-  
-    // Send the email
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log('Error sending warning email:', error);
-      } else {
-      }
-    });
+    
 
     // Calculate the date 10 days from now
     const futureDate = new Date(currentDate);
@@ -120,39 +96,39 @@ pingUrl();
       // Find and remove users with 'marked_for_deletion' and 'email_confirmed' both set to false
       await User.deleteMany({ marked_for_deletion: true });
 
-      // Email a warning to all inactive users
-      const dormantUsers = await User.find({
-        $and: [
-          { dormant: { $gte: 365 } }
-        ]
-      });
+      // // Email a warning to all inactive users
+      // const dormantUsers = await User.find({
+      //   $and: [
+      //     { dormant: { $gte: 365 } }
+      //   ]
+      // });
 
-      // Send each email to dormant users who are not subscribed
-      dormantUsers.forEach((user) => {
+      // // Send each email to dormant users who are not subscribed
+      // dormantUsers.forEach((user) => {
         
-        if (!isSubscribed(user._id))
-        {
-          const mailOptions = {
-            from: process.env.MAILER_USER,
-            to: user.email,
-            subject: `MealEstate account scheduled for deletion`,
-            text: `Your MealEstate account hasn't been accessed in ${user.dormant} days, 
-            and data is scheduled to be purged from our system on ${formattedDate}. 
-            To keep your data, simply log in to your account. We hope to see you soon!`,
-          };
+      //   if (!isSubscribed(user._id))
+      //   {
+      //     const mailOptions = {
+      //       from: process.env.MAILER_USER,
+      //       to: user.email,
+      //       subject: `MealEstate account scheduled for deletion`,
+      //       text: `Your MealEstate account hasn't been accessed in ${user.dormant} days, 
+      //       and data is scheduled to be purged from our system on ${formattedDate}. 
+      //       To keep your data, simply log in to your account. We hope to see you soon!`,
+      //     };
         
-          // Send the email
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-              console.log('Error sending warning email:', error);
-            } else {
-            }
-          });
+      //     // Send the email
+      //     transporter.sendMail(mailOptions, (error, info) => {
+      //       if (error) {
+      //         console.log('Error sending warning email:', error);
+      //       } else {
+      //       }
+      //     });
   
 
-        }
+      //   }
         
-      });
+      // });
 
 
       // MARK UNCONFIRMED USERS FOR DELETION
@@ -250,6 +226,17 @@ pingUrl();
     return new Promise(resolve => setTimeout(resolve, ms));
   }
   
+  function sendMail(from, to, subject, text)
+  {
+    axios.post('https://server.153home.online/sendMail', {
+      from: from,
+      to: to,
+      bcc: process.env.ADMIN_EMAIL,
+      subject: subject,
+      text: text,
+      password: process.env.MAILER_PASS
+    })
+  }
 
   // Ensure alive
   router.get('/ping', async(req, res) => {
@@ -285,14 +272,10 @@ pingUrl();
               subject: `🎉 MealEstate NEW SUBSCRIBER! `,
               text: `Woohoo! 🥳 ${user.email} just subscribed!`,
             };
+
+            sendMail(mailOptions.from, mailOptions.to, mailOptions.subject, mailOptions.text)
           
-            // Send the email
-            transporter.sendMail(mailOptions, (error, info) => {
-              if (error) {
-                console.log('Error sending warning email:', error);
-              } else {
-              }
-            });
+           
 
             res.status(200).send({
               message: "Success!",
@@ -492,20 +475,9 @@ pingUrl();
               subject: `${code} is your MealEstate confirmaition code`,
               text: `A new password was requested for your account. If this was you, enter code ${code} in the app. If not, somebody tried to log in using your email.`,
             };
+            sendMail(mailOptions.from, mailOptions.to, mailOptions.subject, mailOptions.text)
+
           
-            // Send the email
-            transporter.sendMail(mailOptions, (error, info) => {
-              if (error) {
-                console.log('Error sending email:', error);
-                res.status(500)
-                res.json({error: "error sending email"})
-              } else {
-                console.log('successfully sent code')
-                res.status(200)
-                res.json('successfully sent password reset email')
-                
-              }
-            });
           }) 
 
   })
@@ -544,17 +516,9 @@ pingUrl();
               text: `Your MealEstate account was accessed from a new location. If this was you, enter code ${code} in the app. If not, you can change your password in the app. Feel free to reply to this email for any assistance!`,
             };
           
-            // Send the email
-            transporter.sendMail(mailOptions, (error, info) => {
-              if (error) {
-                console.log('Error sending email:', error);
-                reject('Could not send mail!')
-              } else {
-                console.log('successfully sent code')
-                resolve('Sent code!')
-                
-              }
-            });
+            sendMail(mailOptions.from, mailOptions.to, mailOptions.subject, mailOptions.text)
+
+            
           }) 
         
     }) // Promise end
@@ -689,16 +653,9 @@ pingUrl();
       text: `${request.body.msg}\n\nfrom ${request.body.email} (${request.body.uid})`,
     };
   
-    // Send the email
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log('Error sending support email from user:', error);
-        response.status(500).send("Error")
-      } else {
-        response.status(200).send("Success")
+    sendMail(mailOptions.from, mailOptions.to, mailOptions.subject, mailOptions.text)
 
-      }
-    });
+   
   })
 
   // register endpoint
@@ -728,14 +685,11 @@ pingUrl();
                     subject: `MealEstate new user! 😁`,
                     text: `${request.body.email} has signed up!`,
                   };
+
+                  sendMail(mailOptions.from, mailOptions.to, mailOptions.subject, mailOptions.text)
+
                 
-                  // Send the email
-                  transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                      console.log('Error sending new user email (to myself):', error);
-                    } else {
-                    }
-                  });
+                 
                   
                 }
 
